@@ -19,7 +19,7 @@ const features = [
     icon: ShieldCheck,
     title: "Automated DDoS defenses",
     description:
-      "Connection-rate limiting and real-time IP banning are tuned specifically for how Minecraft traffic behaves — floods and abusive connections get shut down automatically, before they can bog down your server.",
+      "Per-IP rate limiting blocks floods at 20 connections per 3 seconds — load-tested at 25 rapid attempts with 5 correctly rejected in ~24ms, backed by kernel SYN tuning and automated IP banning built for Minecraft traffic.",
   },
   {
     icon: Rocket,
@@ -38,7 +38,7 @@ const features = [
     icon: LifeBuoy,
     title: "Real support, fast",
     description:
-      "A support queue staffed by people who actually run Minecraft servers, with a median first response time under 15 minutes.",
+      "A support queue staffed by the same people who built and run the infrastructure — not a tier-1 script reader relaying your ticket to someone who's never touched the panel.",
   },
 ];
 
