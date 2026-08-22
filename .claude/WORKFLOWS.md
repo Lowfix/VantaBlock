@@ -37,8 +37,17 @@ if you suspect stale state) to verify — never trust a bare `tsc --noEmit -p .`
 Boots the WSL2 "Ubuntu" distro, ensures a `sleep infinity` keep-alive process is running inside it
 (so WSL2 doesn't idle out and drop Wings), starts the `wings` systemd service inside WSL, polls
 `http://192.168.1.248/` (the real remote Panel box) up to 10×2s waiting for it to respond, then
-runs `npm run dev:all`. Note the comment in this script: Panel+DB now live on a separate box —
-*this* machine only runs Wings, natively in WSL2, not Docker.
+runs `npm run dev:all`.
+
+**Stale as of 2026-08-16, corrected 2026-08-22:** this script's own comment says "this machine only
+runs Wings, natively in WSL2" — that described the now-retired node 1 setup. The real, current
+Main Node (INFRASTRUCTURE.md) is a genuinely separate physical box (192.168.1.113), not this dev
+machine's WSL2 distro. Confirmed independently by two sessions during a routine shutdown-safety
+check: WSL "Ubuntu" here sits stopped, and 192.168.1.113:8080 answers on its own regardless of
+whether this machine is even on. **Practical upshot: shutting down this dev machine does not affect
+Wings, the Main Node, or any running Minecraft server** — don't let this script's stale comment
+suggest otherwise. The script itself hasn't been updated/removed yet since it isn't actively used
+against the current topology; treat its Wings-related steps as legacy, not current-state.
 
 ### `scripts/stop-dev.ps1`
 Kills whatever's listening on ports 5173 and 3001, kills the WSL keep-alive process, then

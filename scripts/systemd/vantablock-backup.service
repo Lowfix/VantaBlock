@@ -1,8 +1,12 @@
 [Unit]
-Description=VantaBlock database backup
+Description=VantaBlock database + .env backup
 Documentation=file:/opt/vantablock/scripts/backup-db.sh
 
 [Service]
 Type=oneshot
 WorkingDirectory=/opt/vantablock
-ExecStart=/opt/vantablock/scripts/backup-db.sh
+# Invoked through bash rather than as ./backup-db.sh on purpose: the execute bit
+# on files under /opt/vantablock does not survive reliably (the deploy tar is
+# built on Windows, which has no POSIX modes, and bulk chmods have stripped it
+# before). Depending on that bit made the timer fail with status 203/EXEC.
+ExecStart=/bin/bash /opt/vantablock/scripts/backup-db.sh

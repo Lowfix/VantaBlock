@@ -30,6 +30,51 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-08-22 — `pterodactyl_client_key` encryption at rest, step 2: existing plaintext rows migrated, verified live
+
+**What:** Migrated the last plaintext `pterodactyl_client_key` rows to encrypted, closing out the
+three-step plan (assess → ship encrypt-on-write → migrate existing data). Gated on the user's direct
+go-ahead and on `vantablock-9b`'s backup/restore rehearsal being confirmed first — this is exactly
+the step the original proposal flagged as needing a real decision, not a default, since it writes to
+every user's live Pterodactyl credential.
+
+**New `scripts/migrate-encrypt-client-keys.mjs`** (duplicates the tiny AES-256-GCM logic from
+`server/secretCrypto.ts` on purpose — this runs standalone via plain `node`, not through tsx/tsc, so
+it can't import the compiled server module). `node scripts/migrate-encrypt-client-keys.mjs
+<data.db path> [--dry-run]`:
+- Only touches rows still missing the `enc:v1:` prefix — idempotent, safe to interrupt or re-run.
+- Takes its own pre-migration snapshot via `scripts/db-snapshot.mjs` (the same verified `VACUUM INTO`
+  approach the nightly backup uses) immediately before writing anything, independent of the nightly
+  job — a dedicated rollback point for this one operation.
+- Encrypts each row, immediately decrypts the result back and compares to the original plaintext
+  **before** the `UPDATE` runs — a row is only ever overwritten once its own round-trip is proven.
+- `--dry-run` reports what would happen with zero writes; exits non-zero on any real failure so a
+  partial run is never silently "mostly fine."
+
+**Tested locally first**, against a throwaway SQLite file mimicking the real `users` table: dry-run
+correctly found and listed candidates without writing; real run migrated cleanly; re-running
+afterward correctly found zero candidates (idempotency); independently re-opened the DB and decrypted
+every migrated row outside of the migration script itself, confirming the stored ciphertext actually
+recovers the real original plaintext, not just the in-process check the script already does.
+
+**Then run against production**, `scripts/deploy-server.ps1` not needed for this — copied just the
+two `.mjs` files directly rather than a full app redeploy for a one-off script. Dry-run first (found
+2 plaintext rows — the only two, since every signup since step 1 shipped has already been encrypted
+on write; production currently has exactly 2 real user accounts total, invite-only friends phase).
+Real run: pre-migration snapshot verified (`ok: 11 tables, 83 rows, integrity_check passed`), both
+rows migrated, 0 failures. Confirmed after: `/api/health` and `/api/public/stats` both 200, and a
+direct read of the DB shows both rows now carry the `enc:v1:` prefix, with 0 plaintext rows
+remaining anywhere in `users`.
+
+**Left in place on purpose**: the pre-migration snapshot
+(`server/data.db.pre-clientkey-migration-<timestamp>`) sitting next to `data.db` on the box — a
+recent, targeted rollback point on top of the nightly backup. Fine to prune once confidence in the
+migration holds after a few days; not cleaned up automatically by the script.
+
+**See also:** `server/secretCrypto.ts`, the step-1 entry and the original proposal further down in
+this file, `scripts/db-snapshot.mjs`, `scripts/backup-db.sh` (the pattern this borrows its snapshot
+step from).
+
 ## 2026-08-22 — Automated nightly backups of `data.db` **and** `.env`, local + encrypted off-site
 
 **What:** Closes the "no automated backup" gap from the 2026-08-21 infra hygiene sweep. Every user,
@@ -84,6 +129,24 @@ holds the Stripe secret key, the Cloudflare API token, `SESSION_SECRET` and the 
 user can still read `.env` through the app's own `process.loadEnvFile()` path and the API stayed healthy.
 Almost certainly an artifact of the deploy tar being built on Windows, which has no POSIX modes — so
 **worth re-checking after any deploy that ever does touch these files.**
+
+**Caught the job silently breaking within the hour — and hardened against the cause.** A re-check about
+20 minutes after the first successful run found the timer failing with `status=203/EXEC`: the execute bit
+on `/opt/vantablock/scripts/backup-db.sh` had been stripped (mtime unchanged, so not a deploy — most
+likely another session's bulk `chmod` across `/opt/vantablock` while hardening file modes). The unit now
+runs `ExecStart=/bin/bash /opt/vantablock/scripts/backup-db.sh` instead of executing the file directly,
+so it no longer depends on a mode bit that demonstrably doesn't survive on this box (Windows-built deploy
+tars carry no POSIX modes, and bulk chmods have stripped it once already). **General lesson for anything
+scheduled on this box: don't depend on the execute bit — invoke the interpreter explicitly.** Worth
+noting the failure mode worked exactly as designed: the job reported failure loudly instead of quietly
+not running.
+
+**Second catch from the same re-check:** `.env` had been edited (22 → 23 keys, presumably
+`CLIENT_KEY_ENCRYPTION_KEY`) *after* the most recent archive, so the newest secret wasn't in any backup
+and wouldn't have been until 03:30. Triggered a run immediately; the current archive contains all 23
+keys. **Whenever a new secret is added to `.env`, run `systemctl --user start vantablock-backup.service`
+right away rather than waiting for the timer** — especially for a key that makes data undecryptable if
+lost.
 
 **Also confirmed:** the orphan `settings` table predicted in the hygiene sweep does exist in production
 (1 row) — the last trace of the lazymc experiment. Left alone; it's the DB lane's call.
@@ -414,11 +477,19 @@ held its 3 file descriptors on `data.db`/`-wal`/`-shm` at the moment the WAL tru
 Confirmed on the real box, not just in a local repro — held descriptors do not block a checkpoint,
 and the viewer never needed to be touched.
 
-**Separately, for whoever owns it:** `db-viewer.mjs` is `readonly: true` and binds `127.0.0.1` only,
-so "no-auth SQLite browser" overstates the exposure — not internet-reachable, cannot write. But it
-does serve `users` (password hashes, and `pterodactyl_client_key` in plaintext) with no
-authentication to anything that can reach loopback on that box, including via an SSH tunnel. Left
-running: killing a 6-day-old process on live production isn't a call to make unprompted.
+**Separately — `db-viewer.mjs`: RESOLVED same day by another session, don't re-flag it.** It was
+`readonly: true` and `127.0.0.1`-bound (so "no-auth SQLite browser" overstated the exposure — never
+internet-reachable, never able to write), but it did serve `users` — password hashes and plaintext
+`pterodactyl_client_key` — unauthenticated to anything reaching loopback on that box. Now fixed and
+independently verified from this session: all routes return **401** without credentials, and the old
+PID is gone (process genuinely restarted on the new code, not just new code sitting on disk). The
+implementation is sound — Basic auth via `crypto.timingSafeEqual`, throwing at startup if
+`DBVIEWER_USER`/`DBVIEWER_PASS` are unset rather than falling back to a hardcoded default (same
+reasoning as the `SESSION_SECRET` fix), plus **two composed redaction layers**: the table browser
+redacts by output column name, and the raw-SQL page *rejects outright* any query whose text
+references `password_hash`/`pterodactyl_client_key`. That second layer is the important one —
+redacting by output name alone is defeated by `SELECT password_hash AS x`, since the result comes
+back keyed `x`.
 
 **See also:** `server/db.ts` (pragma block), `/opt/vantablock/db-viewer.mjs` (not in this repo).
 

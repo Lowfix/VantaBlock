@@ -15,6 +15,14 @@ dist-ssr
 server/*.db
 server/*.db-wal
 server/*.db-shm
+# Hand-made DB copies. `server/*.db` does NOT match these — the convention
+# already in use on production is `data.db.backup-20260815-144554`, where the
+# name ends in the timestamp, not in `.db`. One of these in the working tree
+# would be silently committable, and it holds every password hash, Pterodactyl
+# client key and session secret the live DB does.
+server/*.db.backup-*
+server/*.db.bak
+server/data.db.*
 pterodactyl/data
 
 # Real credentials that live in the working tree, not just .env:

@@ -74,8 +74,9 @@ Tables:
 
 - **`users`** — profile, `password_hash` (null for Google-only accounts), `auth_provider`,
   `balance`, invoice-preview fields, 2FA flag (visual only — see FRONTEND.md), notification prefs,
-  `pterodactyl_user_id` + `pterodactyl_client_key` (plaintext — local-dev-only simplification,
-  flagged in the code as needing encryption for a real production build), `is_admin`, `suspended`.
+  `pterodactyl_user_id` + `pterodactyl_client_key` (**encrypted at rest** as of 2026-08-22 —
+  `server/secretCrypto.ts`, read through `decryptClientKey()`; see the Pterodactyl integration
+  section below for the key-loss caveat), `is_admin`, `suspended`.
 - **`servers`** — local mirror of a real Pterodactyl server: `pterodactyl_identifier` (the string
   id used in Pterodactyl's client API URLs, unique), `pterodactyl_id` (Pterodactyl's internal
   numeric id, used for Application API calls), `plan_id` (empty string `""` means a custom-configured
@@ -105,7 +106,9 @@ Tables:
 ## Auth (`server/auth.ts`)
 
 JWT in an httpOnly cookie (`vb_session`, 30-day expiry, `sameSite: "lax"`), signed with
-`SESSION_SECRET` (falls back to a hardcoded dev secret if unset — **must** be set in real prod).
+`SESSION_SECRET` — **fails closed at startup if unset** (used to silently fall back to a hardcoded
+dev secret; every production session was signed with that known value until this was fixed
+2026-08-21, see DEVLOG). Losing this value just forces everyone to log in again, nothing worse.
 `requireAuth` middleware also re-checks `suspended` on every request (not just at login) and
 clears the cookie + 403s if the account was suspended after the session was issued.
 `toPublicUser()` is the canonical shape sent to the frontend — computes `isAdmin`/`isOwner` from
@@ -117,7 +120,13 @@ other).
 Thin typed wrapper over both Pterodactyl APIs — **Application API** (`APP_KEY`, full admin power,
 used for anything cross-user: creating servers/users, suspending, node/allocation queries) and
 **Client API** (per-user `pterodactyl_client_key`, scoped to that user's own servers — everything
-in `servers.ts` routes uses this). Notable pieces:
+in `servers.ts` routes uses this). `pterodactyl_client_key` is encrypted at rest (`server/secretCrypto.ts`,
+AES-256-GCM) as of 2026-08-22 — same fail-closed-at-startup pattern as `SESSION_SECRET`, but under
+`CLIENT_KEY_ENCRYPTION_KEY`. Unlike `SESSION_SECRET`, losing this key is **not recoverable**: every
+already-encrypted `pterodactyl_client_key` becomes permanently undecryptable, meaning every user
+needs their Pterodactyl access re-mirrored by hand. This is exactly why `.env` now has its own
+automated encrypted off-site backup (see `scripts/backup-db.sh`) — that backup is what makes this
+key survivable at all. Notable pieces:
 
 - `mintClientApiKeyForUser()` — the Application API has **no endpoint** to mint a client key on a
   user's behalf, so this replays Panel's own login → CSRF → "create API key" web flow by hand
