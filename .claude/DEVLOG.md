@@ -88,6 +88,31 @@ session's port 5173 was left running, only this session's port-5174 instance was
 same 6 tiers/prices), `src/index.css` (tokens reused, nothing added), the AmbientBackground/
 FloatingVoxels entry below (`.animate-float`/`prefers-reduced-motion` precedent this follows).
 
+**Follow-up fix, same day:** the layout above looked "genuinely broken" once the user actually saw
+it, not just "not to taste" — confirmed via a real screenshot. Two compounding bugs, both in the
+fan's positioning math: (1) `getCardStyle`'s width/scale swap (`w-[290px]` featured vs. `w-[250px]`
+non-featured, plus a scale falloff down to `0.76`) meant the five non-featured cards rendered at
+roughly 15–20% the apparent size of the featured one — barely legible; (2) the "click to feature"
+handler physically re-sorted the deck by computing each card's position as a *signed offset from
+whichever index was featured* (`signedOffset`), so with 6 (even) tiers the fan was never actually
+centered — e.g. featuring Grove (4th of 6) put 3 cards on one side and 2 on the other, visibly
+lopsided. Fixed both by decoupling position from state entirely: `fanSlot(index, total)` now
+computes each card's rotation/vertical-offset purely from its own fixed tier-order slot, never from
+which card is active, so the geometry literally cannot change on click. Clicking a card only toggles
+scale/z-index/glow/border on *that* card via `getCardStyle` and expands its feature checklist
+(`PlanCardBody`'s `expanded` prop, an accordion via `max-h-0`→`max-h-[420px]` rather than a content
+swap) — no card is ever moved or resized into illegibility, and `PlanFullContent`/`PlanCompactContent`
+were merged into one `PlanCardBody` so every card, active or not, always shows icon/name/RAM/price/
+vCores/storage/players at the same base size. Layout changed from absolute-positioned/`translate3d`
+to a real CSS grid (`grid-cols-3` → `lg:grid-cols-6`, mobile `<640px` still gets the separate
+`MobilePlanList`) so cards can never overlap regardless of viewport width, and the pricing section's
+outer container widened (`max-w-7xl` → `max-w-[1400px]`) to give the 6-across `lg:` layout more room.
+Re-verified the same way as the original build — real Playwright screenshots (default state with
+Grove featured, then after clicking Redwood), measured actual rendered card `getBoundingClientRect()`
+widths to confirm all 6 stayed within a ~14% spread (vs. the prior ~80% collapse), reduced-motion and
+390px-mobile passes re-run and still clean, `tsc -b --force`/`npm run build` both clean, dev server
+and scratch Playwright install torn down afterward.
+
 ---
 
 ## 2026-08-22 — Code-side teardown: deleted the entire backend, reduced the app to a static landing page
