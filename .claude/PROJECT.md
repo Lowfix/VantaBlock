@@ -34,17 +34,27 @@ Do not assume "no real billing" means shortcuts are fine elsewhere — provision
 API calls, DNS, and the relay are all hitting real infrastructure and must be treated with the
 same care as a paid product.
 
-**The current Panel/Wings/backend infrastructure is itself a test rig, not the permanent
-setup — direct from the user, 2026-08-23.** Once real hardware is acquired, the plan is to wipe
-and rebuild Panel, Wings, and the rest of the backend infra entirely from scratch. This does
-**not** include the website — the VantaBlock React/Express app, its landing page, and its own
-`data.db` are the durable, kept asset; only Panel/Wings/the surrounding boxes are expected to be
-thrown away and redone. Keep treating every infra decision with real-product care regardless (see
-above) — the rebuild is a "when," not a license to be sloppy now — but don't be surprised if a
-config choice, a hardening fix, or a topology detail documented in INFRASTRUCTURE.md turns out to
-describe hardware that no longer exists by the time a future session reads it. When something in
-INFRASTRUCTURE.md looks stale against what you're actually seeing on the boxes, this is why —
-verify against the live box rather than assuming the doc is still current.
+**SUPERSEDED same day — full teardown in progress, not deferred.** An earlier version of this note
+(still visible in git history as of commit `ab95daa`) said only Panel/Wings/the surrounding boxes
+were getting torn down "once real hardware is acquired," with the Express app and `data.db` kept
+as a durable asset. That was accurate for a few minutes and then the user gave a much broader,
+**immediate** instruction that supersedes it entirely: **the whole backend is being deleted now,
+not deferred** — `server/` (the entire Express app), `data.db`, and every authenticated page
+(login, register, dashboard, server panel, billing, support, owner console — everything) are all
+being removed from the codebase in this same session, confirmed explicitly by the user. **What
+survives is only the public marketing landing page**, reduced to a pure static site with no
+backend, no database, no auth, no live-data fetches (including removing Hero's live-stats card,
+which pulled real numbers from the backend being deleted). Deployment is moving to **Cloudflare
+Pages reading directly from GitHub** — see WORKFLOWS.md — so there's no deploy script to maintain
+either. Panel, Wings (the Main Node), the customer/Panel MariaDB, Redis, and the Relay VM are all
+being destroyed on the infrastructure side in parallel with this code change, per INFRASTRUCTURE.md.
+
+If you're reading this and the codebase still has `server/`, dashboard pages, or `data.db` in it,
+that means the teardown was interrupted or is still in progress — check DEVLOG.md for the latest
+status before assuming either the old (kept-backend) or new (landing-page-only) story is current.
+When rebuilding infrastructure later on new hardware, the website itself is expected to stay
+exactly as this teardown leaves it (a static landing page) unless the user explicitly asks to
+rebuild the authenticated app too — that's a bigger decision than just "get new hardware."
 
 ## Marketing copy: intentionally aspirational
 
