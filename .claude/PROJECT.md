@@ -1,148 +1,66 @@
 # VantaBlock — Project Overview
 
-VantaBlock is a **real** Minecraft server hosting platform — not a demo. It's a React/Express
-app that wraps a genuine, self-hosted Pterodactyl Panel + Wings install, publicly reachable at
-`https://vantablock.duxy.online` via a Cloudflare Tunnel.
+VantaBlock is now a **pure static marketing landing page** — a React/Vite frontend with no
+backend, no database, and no authenticated app behind it. It used to be a full Minecraft server
+hosting platform (React/Express frontend + API wrapping a self-hosted Pterodactyl Panel + Wings
+install); that entire backend and every authenticated page were deleted from this codebase on
+2026-08-22 as part of a full infrastructure teardown (Panel, Wings, the Main Node, both MariaDBs,
+Redis, and the Relay VM were all destroyed on the infra side at the same time — see
+INFRASTRUCTURE.md for what, if anything, survives there).
 
-Read this file first. See also: [BACKEND.md](BACKEND.md), [FRONTEND.md](FRONTEND.md),
+Read this file first. See also: [BACKEND.md](BACKEND.md) (now describes the **retired** backend —
+useful only as reference if the authenticated app is ever rebuilt), [FRONTEND.md](FRONTEND.md),
 [INFRASTRUCTURE.md](INFRASTRUCTURE.md), [WORKFLOWS.md](WORKFLOWS.md).
 
-## Current phase: friends/free hosting
+## What the site is today
 
-This is **not yet a paying business** — it's in a "friends/free" phase, dressed up to look and
-operate like a real company (real infra, real support tickets, real account roles), but nothing
-is actually charged. Concretely:
+A single page (`src/pages/LandingPage.tsx`) — hero, features, an invite-only/plan-tiers notice,
+a closing CTA, footer. No routing library (`react-router-dom` was removed — there's nothing to
+route to), no login/register/dashboard, no live data fetching of any kind. Every button on the
+page either scrolls to the `#pricing` section or goes nowhere functional yet (footer's
+placeholder links) — there is no signup or contact flow behind any of them right now.
 
-- `freePlan()` (server/plans.ts) zeroes out the price of whatever plan a customer picks before
-  it's actually provisioned — the plan's RAM/disk/CPU tiers are real and enforced, only the price
-  isn't charged.
-- The Stripe integration (`stripeBilling.ts`, `stripe_topups` feature flag) exists and works, but
-  isn't the normal path right now — customers aren't expected to add real funds.
-- Despite being free, **treat this as a real product** when building features: real support
-  tickets (not fake success toasts), real account roles, real infra decisions. The user explicitly
-  wants the free phase to still feel and operate like a legitimate company.
-- **Nobody is actually hosting on the platform yet** — every server currently on it is the user's
-  own test server. This is why the game-world/Wings-node backup gap (see INFRASTRUCTURE.md — only
-  the VantaBlock app's own `data.db`/`.env` are backed up; Panel's + the customer database's
-  MariaDB and the actual Minecraft world files on Wings nodes are not) is a **deliberate,
-  discussed-and-agreed deferral (2026-08-23)**, not an oversight — there's nothing real to lose
-  right now, and the user wants to build it properly once real storage (local + offsite) is in
-  place, rather than bolt something temporary on now. Don't "fix" this unprompted; it becomes
-  urgent specifically when real customers start hosting real servers, not before.
+**Deploys via Cloudflare Pages reading directly from `github.com/Lowfix/VantaBlock`** — push to
+`main`, Pages auto-builds (`npm run build`, output `dist/`) and republishes. There is no custom
+deploy script anymore (`scripts/deploy-server.ps1` and `scripts/deploy-panel-theme.ps1` were both
+deleted in the same teardown — the first had nothing left to deploy, the second had no Panel left
+to theme). `scripts/start-dev.ps1`/`stop-dev.ps1` were deleted too — they existed to boot the old
+WSL/Wings/Express dev stack, none of which exists anymore. Local dev is just `npm run dev`.
 
-Do not assume "no real billing" means shortcuts are fine elsewhere — provisioning, Pterodactyl
-API calls, DNS, and the relay are all hitting real infrastructure and must be treated with the
-same care as a paid product.
+**Marketing copy is still intentionally aspirational.** `Hero.tsx`, `Features.tsx`,
+`FriendsPhaseNotice.tsx`, `Footer.tsx`, and `src/mock-data/plans.ts` (the only surviving
+`mock-data` file — `FriendsPhaseNotice` reads its plan tiers straight from it) still advertise
+**AMD Ryzen 9 9955HX / 96GB DDR5 / 5.4GHz** hardware and describe an invite-only free phase with
+plan tiers. None of that is backed by anything live anymore — it's copy describing what the
+*product* is meant to be, independent of whatever infrastructure exists behind it at any given
+moment. **Don't "fix" this to match reality** (there currently isn't a "reality" to match — no
+servers, no invite system) unless the user explicitly asks; this has been asked-then-reverted
+before on the hardware-specs question specifically.
 
-**SUPERSEDED same day — full teardown in progress, not deferred.** An earlier version of this note
-(still visible in git history as of commit `ab95daa`) said only Panel/Wings/the surrounding boxes
-were getting torn down "once real hardware is acquired," with the Express app and `data.db` kept
-as a durable asset. That was accurate for a few minutes and then the user gave a much broader,
-**immediate** instruction that supersedes it entirely: **the whole backend is being deleted now,
-not deferred** — `server/` (the entire Express app), `data.db`, and every authenticated page
-(login, register, dashboard, server panel, billing, support, owner console — everything) are all
-being removed from the codebase in this same session, confirmed explicitly by the user. **What
-survives is only the public marketing landing page**, reduced to a pure static site with no
-backend, no database, no auth, no live-data fetches (including removing Hero's live-stats card,
-which pulled real numbers from the backend being deleted). Deployment is moving to **Cloudflare
-Pages reading directly from GitHub** — see WORKFLOWS.md — so there's no deploy script to maintain
-either. Panel, Wings (the Main Node), the customer/Panel MariaDB, Redis, and the Relay VM are all
-being destroyed on the infrastructure side in parallel with this code change, per INFRASTRUCTURE.md.
+## History: what got deleted, and why
 
-If you're reading this and the codebase still has `server/`, dashboard pages, or `data.db` in it,
-that means the teardown was interrupted or is still in progress — check DEVLOG.md for the latest
-status before assuming either the old (kept-backend) or new (landing-page-only) story is current.
-When rebuilding infrastructure later on new hardware, the website itself is expected to stay
-exactly as this teardown leaves it (a static landing page) unless the user explicitly asks to
-rebuild the authenticated app too — that's a bigger decision than just "get new hardware."
+Until 2026-08-22, this was a real, live Minecraft hosting platform (`server/`: Express routers,
+SQLite (`data.db`), Pterodactyl API wrapper, provisioning, owner/admin/member roles, feature
+flags, a six-tier plan lineup, a request-vs-instant-deploy approval flow, an internal support
+ticket system, Stripe integration). All of that is gone from this repo now — deleted in full,
+not archived here. If any of those specifics matter again (rebuilding the authenticated app,
+understanding a past decision), they're recoverable from git history before commit `<the teardown
+commit — check DEVLOG.md for its hash>`, not from this file or BACKEND.md, which now only
+describes what *used* to exist.
 
-## Marketing copy: intentionally aspirational
+The teardown was explicit and immediate, not deferred: an earlier plan (still visible in git
+history, commit `ab95daa`) was to keep the website/database as a durable asset and only rebuild
+Panel/Wings on new hardware later. That plan was superseded the same day (commit `adbd60a`) by a
+broader, immediate instruction — delete the whole backend and every authenticated page now, keep
+only the static landing page. If rebuilding infrastructure later leads to also rebuilding the
+authenticated app, that's a distinct, bigger decision than "get new hardware" and needs its own
+explicit go-ahead — don't assume it's implied.
 
-The site's marketing copy (Features.tsx, Hero.tsx, Pricing.tsx, AuthLayout.tsx, Footer.tsx,
-`src/mock-data/plans.ts`) advertises **AMD Ryzen 9 9955HX / 96GB DDR5 / 5.4GHz** hardware.
+## No git repository — **stale, corrected 2026-08-22**
 
-**This is not the real current hardware.** The actual Main Node CPU (confirmed via `lscpu` on the
-real machine) is an **AMD Ryzen 7 5700U, DDR4, ~4.37GHz max**. The user knows this and explicitly
-chose to keep the aspirational copy ("no put it all back" — see git-less revert history) because
-the real node hardware hasn't been upgraded yet but the marketing is written for where the
-business is headed. **Do not "fix" this copy to match real hardware** unless the user explicitly
-asks again — it has already been corrected and reverted back on purpose once this session.
-
-## Roles: Owner / Admin / Member
-
-Defined in `server/adminGate.ts`:
-
-- **Owner** — the one account whose email matches the `ADMIN_EMAIL` env var, exactly
-  (case-insensitive). Permanent, can't be demoted or suspended through the app itself. Gets a
-  completely separate nav/console (`ownerConsoleNavItems` in `DashboardShell.tsx`) — not the
-  customer dashboard with extra items appended.
-- **Admin** — any other account with `is_admin = 1`. Promoted via the owner's Account Management
-  tab. Gets the same operational powers as the owner (instant deploy without approval, Bank
-  access, approving/denying requests) but is revocable by the owner at any time.
-- **Member** — everyone else. Subject to `require_server_approval` (if enabled) and can't touch
-  Bank, Accounts, or owner-console-only routes.
-
-`isOwnerUser(userId)` / `isAdminUser(userId)` in `adminGate.ts` are the source of truth — always
-gate new owner/admin-only routes and pages through these, don't reinvent role checks.
-
-## Feature flags (server/featureFlags.ts)
-
-Stored in the `feature_flags` SQLite table, all default `enabled = 1`, toggled from the Owner
-Settings page:
-
-| Key | Effect when OFF |
-|---|---|
-| `server_requests` | Customers can't submit a new-server request at all (only matters while approval is required). |
-| `require_server_approval` | Customer deploys go instant, same as owner/admin — no approval queue. |
-| `stripe_topups` | Customers can't add funds via card. |
-| `new_registration` | New signups blocked; existing accounts can still log in. |
-| `google_auth` | Google sign-in/sign-up disabled entirely, including for existing Google-linked accounts. |
-| `self_service_subdomains` | Customers (and admins, on their own servers) can't set/change a subdomain from the Players tab. |
-
-## Plan lineup (server/plans.ts, mirrored in src/mock-data/plans.ts)
-
-Six tiers, current as of this write-up — **verify against the live file before assuming these
-numbers are still current**, plans have been restructured before at the user's request:
-
-| id | name | RAM | Disk | CPU | vCores (marketing) |
-|---|---|---|---|---|---|
-| sprout | Sprout | 2GB | 20GB | 200% | 2 vCores @ 5.4GHz |
-| sapling | Sapling | 4GB | 40GB | 200% | 2 vCores @ 5.4GHz |
-| thicket | Thicket | 6GB | 60GB | 300% | 3 vCores @ 5.4GHz |
-| grove | Grove | 8GB | 80GB | 400% | 4 vCores @ 5.4GHz |
-| woodland | Woodland | 10GB | 100GB | 400% | 4 vCores @ 5.4GHz |
-| redwood | Redwood | 12GB | 120GB | 500% | 5 vCores @ 5.4GHz |
-
-`customPlanLimits()` builds an ad-hoc plan (id `""`, name `"Custom"`) for admin instant-deploys
-that specify raw RAM/disk/CPU numbers directly instead of picking a tier. `freePlan()` wraps any
-`PlanLimits` with its price zeroed — used for every non-Stripe customer deploy/request-approval
-in this free phase.
-
-## Request-vs-instant-deploy flow
-
-- **Owner/Admin**: instant deploy, any RAM/disk/CPU via raw number fields (`customPlanLimits`).
-- **Customer, `require_server_approval` ON** (default): picks a plan from the dropdown
-  (`DeployServerModal.tsx`), lands in `server_requests` as `pending`. Owner/admin reviews in
-  Requests, can approve at the same plan or **downgrade** to a lower one
-  (`AcceptRequestModal.tsx` — dropdown defaults to what was requested), or deny with a reason.
-  Approval always uses `freePlan()`.
-- **Customer, `require_server_approval` OFF**: deploys instantly, same as owner, still via a plan
-  dropdown (not raw numbers) and still free.
-
-## Support tickets
-
-Internal ticketing system (not external email) — `support_tickets` /
-`support_ticket_messages` tables, `server/routes/support.ts`, mounted at `/api/support`.
-Customer-facing at `/support` (`SupportPage.tsx`), owner-facing at `/owner/support`
-(`OwnerSupportPage.tsx`), shared thread view is `TicketThreadModal.tsx` (`isOwnerView` prop toggles
-owner-only controls). Tickets can be general or optionally attached to a specific server
-(`serverIdentifier`/`serverName`, populated automatically when opened from a server's own panel).
-A customer replying to a closed ticket auto-reopens it; the owner closes explicitly when done. No
-email/external notifications — the owner is expected to just check the Owner Console.
-
-## No git repository
-
-This project is **not** a git repo. There is no `git log`/`git diff`/`git revert` to fall back on.
-Reverting a change means manually re-applying the exact reverse edits. Be extra careful about
-losing track of "what state is this file actually in" during multi-step edits, and don't assume
-you can recover a prior version any way other than remembering/re-deriving it.
+An earlier version of this file said there was no git repo and no `git log`/`git diff`/`git
+revert` to rely on. That's no longer true — this is a real git repo
+(`github.com/Lowfix/VantaBlock`, `main` branch), pushing has needed the user's explicit
+confirmation each session so far (don't assume standing permission), and `git log`/`git diff`/
+`git show` are all normal, reliable tools here now. Use them instead of manually tracking file
+state the way earlier sessions had to.

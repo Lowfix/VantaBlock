@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "../ui/Button";
 import { VoxelIsland } from "../illustrations/VoxelIsland";
@@ -15,13 +14,13 @@ export function CTASection() {
               Your world is one deploy away.
             </h2>
             <p className="mx-auto mt-4 max-w-md text-[15px] text-text-md">
-              Got an invite code? Sign up, tell us what you want to run, and we'll get it set up for you.
+              Take a look at what's on offer, and get in touch once pricing goes live.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link to="/register" className={buttonVariants({ variant: "primary", size: "lg" })}>
-                Deploy your server
+              <a href="#pricing" className={buttonVariants({ variant: "primary", size: "lg" })}>
+                View plans
                 <ArrowRight size={16} />
-              </Link>
+              </a>
             </div>
           </div>
         </div>

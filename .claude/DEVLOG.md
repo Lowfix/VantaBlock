@@ -11,9 +11,10 @@ tried, what broke, and what fixed it, without re-discovering the same bug twice.
   link back to that entry, and only add a new one if this occurrence taught something new.
 
 **When not to bother:** typos, formatting, anything already fully explained by a normal commit
-message (there's no git history here, but "obvious from reading the diff" is still the bar) — this
-project has no git repository, so this file is doing double duty as the changelog git would
-normally provide.
+message — "obvious from reading the diff" is the bar. (A real git repo exists as of 2026-08-22,
+`github.com/Lowfix/VantaBlock` — this file predates that and still carries more of the narrative
+weight than commit messages alone do; keep using it, don't assume `git log` alone is enough
+context for a future session.)
 
 **Format:** newest entry at the top. Keep entries short — link out to a topic file
 (`PROJECT.md`/`BACKEND.md`/`FRONTEND.md`/`INFRASTRUCTURE.md`/`WORKFLOWS.md`/`PANEL_THEME.md`) for
@@ -29,6 +30,197 @@ the full explanation rather than duplicating it here. This file is the index of 
 ```
 
 ---
+
+## 2026-08-22 — Code-side teardown: deleted the entire backend, reduced the app to a static landing page
+
+**What:** The code-side half of the full infra teardown (see the entries below and
+PROJECT.md's History section). Deleted, wholesale: `server/` (the entire Express app — every
+router, `db.ts`, the Pterodactyl API wrapper, provisioning, auth); every page except
+`LandingPage.tsx` (Login, Register, Dashboard, ServerPanel, Billing, Support, Accounts, Bank,
+CreationRequests, AccountSettings, every `pages/owner/*`); `src/components/{account,billing,
+dashboard,panel,support}/*` and `layout/{AuthLayout,DashboardShell,RequireAuth}.tsx`;
+`src/context/UserContext.tsx`; every `src/lib/*` file except `cn.ts`/`useParallax.ts`/
+`useElementHeight.ts`; `src/types/google.d.ts`; every `src/mock-data/*` file except `plans.ts`;
+every `src/components/ui/*` primitive except `Button.tsx`/`Badge.tsx` (verified each deletion
+with a real grep of importers first, not by guessing from the task list — caught two the original
+list didn't mention: `landing/Pricing.tsx` and `ui/Card.tsx`, both already fully dead/unimported
+before this session started). `App.tsx` now just renders `<LandingPage />` — no router, since
+there's only one page. `react-router-dom` dropped as a dependency entirely; every `<Link>` in the
+surviving components became a plain `<a>`.
+
+**Fixed the now-broken CTAs** rather than leaving dead `/login`/`/register` links: every button
+that used to point at a signup flow either now scrolls to `FriendsPhaseNotice`'s `#pricing`
+section (`PublicNavbar`'s "Get started", `CTASection`'s "View plans") or was removed outright
+where a real destination doesn't exist and pointing it at `#pricing` would've been circular
+(`FriendsPhaseNotice`'s own "I have an invite code" and per-card "Request {plan}" buttons — that
+section *is* `#pricing`). Removed Hero's live-stats card (`/api/public/stats` fetch + `usePolling`)
+per the task, and rebalanced Hero's layout from a two-column grid to a single centered column now
+that there's no second column to sit beside.
+
+**Cleaned up build config to match:** deleted `tsconfig.server.json` and its reference in the root
+`tsconfig.json`; trimmed `package.json` down to `react`/`react-dom`/`lucide-react` as the only
+runtime deps (dropped `express`, `better-sqlite3`, `bcryptjs`, `jsonwebtoken`, `stripe`,
+`@stripe/*`, `cookie-parser`, `multer`, `express-rate-limit`, `minecraft-server-util`,
+`react-router-dom` and their `@types/*`), removed the `server`/`dev:all`/`start:all`/`stop:all`/
+`deploy:server`/`deploy:panel-theme` npm scripts, ran `npm install` to sync the lockfile (removed
+155 packages). Deleted `scripts/{start-dev,stop-dev,deploy-server,deploy-panel-theme}.ps1` — all
+four existed purely to run/deploy the now-deleted backend or theme a Panel that's being destroyed
+in parallel; none had anything left to target. **Left `scripts/{backup-db.sh,db-snapshot.mjs,
+migrate-encrypt-client-keys.mjs,pre-teardown-snapshot.sh}` and `scripts/systemd/*` alone** —
+that's operational tooling for the production box's own database/backups, out of scope for a
+local-repo-only code change, and this task was explicit about not touching the remote box.
+
+**Verified clean, not just typechecked:** `npx tsc -b --force` clean, `npm run build` clean
+(bundle dropped from 508KB to 222KB JS with the dead weight gone). Then actually ran it —
+`npm run dev`, loaded the page headlessly via Playwright, screenshotted it, and checked
+`console --errors` style output: zero console errors/warnings, all five sections present
+(navbar/hero/features/pricing/footer), every remaining button correctly points at `#pricing`
+rather than a dead route. A clean typecheck alone would not have caught the layout needing
+rebalancing after removing Hero's second column — worth the extra step on a refactor this size.
+
+**Docs**: rewrote PROJECT.md (new "what the site is today" + condensed history of what got
+deleted and why, corrected the stale "no git repository" section), FRONTEND.md (describes only
+what survives now), WORKFLOWS.md (dev is just `npm run dev`, deploy is "push to `main`, Cloudflare
+Pages builds it" — no more custom deploy script), and the root CLAUDE.md (top-level description
+and doc index, since it's the most-loaded file and was actively misleading about there being a
+live backend). BACKEND.md replaced with a short "retired, see git history" pointer rather than a
+near-total rewrite — the code it documented doesn't exist anymore, and pretending to maintain
+400 lines of now-unverifiable route/schema specifics as if they were still living documentation
+seemed worse than pointing at the real source of truth (git history) directly.
+
+**Verification before executing, worth recording:** this task arrived via a peer session's relay,
+initially citing a PROJECT.md note that actually said the *opposite* (website kept, only
+Panel/Wings torn down — that was the accurate state for a few minutes before a broader, immediate
+instruction superseded it). Caught by reading PROJECT.md directly rather than trusting the
+paraphrase, then independently verified the correction via `git fetch`/`git show` on the actual
+commit (not just the peer's second message) before touching anything, then got one direct
+confirmation from the user given the scale before deleting anything. Not a criticism of the peer
+— a real, fast-moving mid-conversation correction that hadn't made it into the docs yet — but worth
+recording as a reason to verify a cited doc directly rather than trust a summary of it, especially
+before a change this size.
+
+**Not yet done**: committed locally (see this commit's own hash for exactly what changed) but
+**not pushed** — pushing needs the user's separate explicit confirmation per established practice
+this session. Cloudflare Pages connection to the GitHub repo is the user's own dashboard step, not
+done from here.
+
+**See also:** PROJECT.md (rewritten), FRONTEND.md (rewritten), BACKEND.md (retired), WORKFLOWS.md
+(rewritten), the two entries directly below (the Panel teardown executed on the box, and the
+PROJECT.md correction that established this was happening now, not deferred).
+
+## 2026-08-22 — Pterodactyl teardown executed on the CasaOS box — stack destroyed, `/opt/pterodactyl` emptied, relay left for the user
+
+**What:** Executed the teardown. All four Pterodactyl containers and their network destroyed
+(`docker compose down -v --remove-orphans`), `/opt/pterodactyl` emptied (344M → 4.0K),
+`vantablock-dbviewer.service` and `vantablock-backup.timer` both stopped and disabled. Irreversible and
+intended. `/opt/vantablock` untouched; the public site stayed up throughout.
+
+**Authorisation note, worth keeping as precedent:** the go-ahead arrived relayed through another session,
+not from the user directly. For something this irreversible that isn't good enough — a peer can't stand in
+for the user on a destructive action. Confirmed directly with the user first, then proceeded. Cost about
+one minute and is the right default for anything unrecoverable.
+
+**Two things needed a root shell and one didn't, in a non-obvious way:**
+- `docker compose down -v` did **not** delete the databases. Panel's `db`, `customer-db` and `panel-var`
+  are **bind mounts** (`./data/...`), not named volumes, so `-v` had nothing to remove. The data lived on
+  until the directory itself was cleared. Worth knowing if anyone assumes `down -v` is sufficient.
+- Clearing it as `glitch` failed — `data/db` and `data/customer-db` are owned by uid `pterodactyl`,
+  `panel-*` by uid `82`, so a plain `rm -rf` hit permission-denied on the MySQL files. Done instead with
+  a throwaway container bind-mounting **only** `/opt/pterodactyl` at `/target`, so the root-privileged
+  `rm` physically could not reach `/opt/vantablock` even given a typo. `glitch` is in the `docker` group
+  by design, so this needed no sudo.
+- Still needs root, left for the user: the now-empty `/opt/pterodactyl` directory itself
+  (`sudo rmdir /opt/pterodactyl`), since `/opt` is root-owned.
+
+**Consequence caught by checking rather than assuming:** the landing page survived (HTTP 200) but
+`/api/public/stats` now degrades to `availableRamGb: 0, totalRamGb: 0` — it fails the Panel node query
+and falls back to zeroes rather than erroring. `Hero.tsx:109` renders that straight to visitors as
+**"0 / 0 GB"**. Not separately fixed here because PROJECT.md's teardown plan already has Hero's live-stats
+card being removed entirely as part of the static-site conversion — but if that conversion slips, the
+public page is advertising zero capacity in the meantime.
+
+**Relay VM — NOT terminated, needs the user.** No OCI CLI or API credentials on any reachable box, so
+this can't be done from an agent session. Everything needed to do it by hand, pulled from the instance's
+own metadata service:
+
+| Field | Value |
+|---|---|
+| Oracle **display name** | `instance-20260815-1332` |
+| OS hostname | `vantablock-relay` |
+| Region / AD | `us-sanjose-1` / `mUwc:US-SANJOSE-1-AD-1` |
+| Shape | `VM.Standard.E2.1.Micro` |
+| Public IP | `163.192.28.118` |
+| OCID | `ocid1.instance.oc1.us-sanjose-1.anzwuljrqar3geacehfy32dcdzzjejjjua5jixvct3embt253plvpgvq7sgq` |
+
+**The display name is not "vantablock-relay"** — that's only the OS hostname. In Oracle's console the
+instance appears as `instance-20260815-1332`; match on the OCID to be certain nothing else gets
+terminated by mistake. Terminating it also destroys the off-site backup archives it held, which is
+consistent with `data.db` being deleted anyway.
+
+**End state verified:** `docker ps -a` empty, `/opt/pterodactyl` contains 0 entries, both user units
+`disabled`, `vantablock-api` still `enabled` and the site still serving 200. The pre-teardown snapshot
+(`~/vantablock-pre-teardown-snapshot-20260822-152736.tar.gz`) is **untouched** — it lives in
+`/home/glitch`, which was never in teardown scope, so it survives on the box in addition to the user's
+own copy.
+
+**See also:** the pre-teardown snapshot entry directly below, [PROJECT.md](PROJECT.md)'s teardown section.
+
+## 2026-08-22 — Pre-teardown snapshot of the whole Pterodactyl side (read-only, 0 failures) — plus the one thing the brief got wrong
+
+**What:** Ahead of the planned Panel/Wings teardown-and-rebuild (see [PROJECT.md](PROJECT.md)), captured
+everything on the doomed boxes that can't be reconstructed later. Purely read-only — nothing stopped,
+deleted or modified. `scripts/pre-teardown-snapshot.sh` (kept in the repo; it also happens to be the
+skeleton of the "extend backups to the Pterodactyl side" work that's currently deferred).
+
+Output: `~/vantablock-pre-teardown-snapshot-<stamp>/` on the CasaOS box plus a matching `.tar.gz`
+(12MB raw, 2.3MB packed, 48 files, 0700/0600 throughout), with a `MANIFEST.txt` recording OK/FAIL per
+item so gaps are explicit rather than silently absent. **27 items captured, 0 failures.**
+
+**Captured:** Panel's full MariaDB dump (233 tables, `mysql` + `panel`, verified to contain `nodes` /
+`servers` / `users` / `allocations` / `eggs` / `database_hosts` / `api_keys`); the customer-db dump;
+`/opt/pterodactyl/.env`, `docker-compose.yml`, the container nginx config, `docker inspect` for all four
+containers and their image digests; **`panel-var/.env` with `APP_KEY` + `HASHIDS_SALT`** — the 100-byte
+file without which the multi-MB Panel dump is undecryptable; the app's verified `data.db` snapshot and
+`.env`; `db-viewer.mjs` (box-only, not in the repo); the systemd user units; the backup passphrase; a
+human-readable node/server/egg/allocation registration table; the relay's `haproxy.cfg`, `wg0.conf`
+(including the private key), live `wg show`, fail2ban jail+filter, sysctl tuning, firewall rules and SSH
+key; the host nginx site config; and the cloudflared unit with its tunnel token.
+
+**Verified rather than assumed:** both dumps end with mysqldump's own `-- Dump completed` marker, the
+archive passes `tar -tzf`, and the node row really is populated. The customer-db dump contains only the
+`mysql` system database — confirming zero customer databases were ever provisioned, so that 5.1MB is
+system tables, not data.
+
+**Incidental find that corroborates an earlier entry:** the node record's `fqdn` is
+**`wings2.duxy.online`**, `scheme https`, `behind_proxy 1`, 24576MB / 400000MB. That's independent
+confirmation of the 2026-08-21 Cloudflare-edge-errors finding — Wings really is reached through its own
+separate tunnel ingress hostname, not through the app's nginx, which is exactly why bursting the console
+endpoint through the public domain behaved differently from bursting nginx directly.
+
+**Where the brief was wrong, and it matters:** the task said the snapshot "doesn't need to be
+encrypted/off-site... just needs to exist." **A pre-teardown snapshot that lives only on the box being
+torn down is not a backup.** Both storage locations in play are themselves scheduled for demolition —
+the snapshot sits on the CasaOS box, and the nightly off-site archives sit on the Relay VM, which is one
+of the "surrounding boxes" going away. Neither survives the event it exists to protect against. **The
+2.3MB archive must be pulled onto a machine that isn't being rebuilt before anything is torn down** —
+flagged to the user; not done unilaterally since it holds every secret this deployment has and the
+destination is theirs to choose.
+
+**Second thing to do before teardown, bigger than the snapshot:** every Minecraft world lives on the
+Main Node, which has no documented SSH path and was not captured. Nothing in this snapshot substitutes
+for pulling those worlds off by hand. Recorded in the snapshot's own `MANIFEST.txt` under KNOWN GAPS so
+it travels with the archive rather than only living here.
+
+**Also worth knowing post-teardown:** once the relay is gone, `vantablock-backup.timer` will start
+failing every night — by design, since it deliberately exits non-zero when the off-site copy fails. That
+will be a correct alarm, not a bug; it needs a new off-site target rather than silencing.
+
+**Other known gaps** (all in MANIFEST.txt): anything needing root on the CasaOS box (`glitch` has no
+NOPASSWD sudo and isn't in `adm`), and Cloudflare's DNS records / tunnel ingress rules — those live in
+Cloudflare's dashboard, so the teardown doesn't destroy them.
+
+**See also:** `scripts/pre-teardown-snapshot.sh`, [PROJECT.md](PROJECT.md)'s teardown section,
+[INFRASTRUCTURE.md](INFRASTRUCTURE.md)'s backup row.
 
 ## 2026-08-22 — customer-db (port 3307): MariaDB `root@%` scoped to Panel's address — partial fix, firewall part still needs a root shell
 

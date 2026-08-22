@@ -1,6 +1,4 @@
-import { Link } from "react-router-dom";
-import { Users, ArrowRight, Check } from "lucide-react";
-import { buttonVariants } from "../ui/Button";
+import { Users, Check } from "lucide-react";
 import { plans } from "../../mock-data/plans";
 import { cn } from "../../lib/cn";
 
@@ -22,14 +20,8 @@ export function FriendsPhaseNotice() {
         </h2>
         <p className="mt-4 text-[15px] leading-relaxed text-text-md">
           Vantablock is currently running free of charge for a small group of friends while we build things out.
-          There's no public pricing yet — accounts need an invite code to sign up. If you've got one, you're in.
+          There's no public pricing yet — here's what's on offer once it goes live.
         </p>
-        <div className="mt-8">
-          <Link to="/register" className={buttonVariants({ variant: "primary", size: "lg" })}>
-            I have an invite code
-            <ArrowRight size={16} />
-          </Link>
-        </div>
       </div>
 
       <div className="mx-auto mt-16 max-w-7xl px-6">
@@ -75,16 +67,6 @@ export function FriendsPhaseNotice() {
                   </li>
                 ))}
               </ul>
-
-              <Link
-                to="/register"
-                className={buttonVariants({
-                  variant: plan.featured ? "primary" : "secondary",
-                  className: "mt-7 w-full",
-                })}
-              >
-                Request {plan.name}
-              </Link>
             </div>
           ))}
         </div>

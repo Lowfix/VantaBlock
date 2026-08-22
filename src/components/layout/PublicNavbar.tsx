@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Logo } from "./Logo";
 import { buttonVariants } from "../ui/Button";
 
 const navLinks = [
-  { label: "Features", href: "/#features" },
-  { label: "Pricing", href: "/#pricing" },
+  { label: "Features", href: "#features" },
+  { label: "Pricing", href: "#pricing" },
 ];
 
 export function PublicNavbar() {
@@ -15,9 +14,9 @@ export function PublicNavbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-line-soft bg-void/80 backdrop-blur-lg">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link to="/">
+        <a href="#">
           <Logo />
-        </Link>
+        </a>
 
         <nav className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
@@ -28,12 +27,9 @@ export function PublicNavbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link to="/login" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-            Log in
-          </Link>
-          <Link to="/register" className={buttonVariants({ variant: "primary", size: "sm" })}>
+          <a href="#pricing" className={buttonVariants({ variant: "primary", size: "sm" })}>
             Get started
-          </Link>
+          </a>
         </div>
 
         <button
@@ -59,12 +55,9 @@ export function PublicNavbar() {
               </a>
             ))}
             <div className="mt-2 flex flex-col gap-2">
-              <Link to="/login" className={buttonVariants({ variant: "secondary", className: "w-full" })}>
-                Log in
-              </Link>
-              <Link to="/register" className={buttonVariants({ variant: "primary", className: "w-full" })}>
+              <a href="#pricing" className={buttonVariants({ variant: "primary", className: "w-full" })}>
                 Get started
-              </Link>
+              </a>
             </div>
           </nav>
         </div>

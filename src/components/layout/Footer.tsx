@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Send, MessageCircle, Code2 } from "lucide-react";
 import { Logo } from "./Logo";
 
@@ -77,9 +76,9 @@ export function Footer() {
               <ul className="mt-4 space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <Link to={link.href} className="text-[13px] text-text-lo transition-colors hover:text-text-md">
+                    <a href={link.href} className="text-[13px] text-text-lo transition-colors hover:text-text-md">
                       {link.label}
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
