@@ -180,16 +180,17 @@ function PlanCardBody({ plan, icon: Icon, expanded }: { plan: Plan; icon: typeof
 }
 
 function PlanFan({ plans: allPlans }: { plans: Plan[] }) {
-  const defaultIndex = Math.max(
-    0,
-    allPlans.findIndex((p) => p.featured)
-  );
+  // The real `featured` flag (Grove) doesn't exist in this trimmed 3-tier
+  // view — default to the middle card instead, matching the reference
+  // design's centered/popped card rather than falling back to index 0.
+  const featuredIndex = allPlans.findIndex((p) => p.featured);
+  const defaultIndex = featuredIndex >= 0 ? featuredIndex : Math.floor((allPlans.length - 1) / 2);
   const [active, setActive] = useState(defaultIndex);
   const [hovered, setHovered] = useState<number | null>(null);
   const { ref, inView } = usePlanFanInView<HTMLDivElement>();
 
   return (
-    <div ref={ref} className="grid grid-cols-3 items-start gap-x-4 gap-y-8 lg:grid-cols-6 lg:gap-x-3">
+    <div ref={ref} className="grid grid-cols-3 items-start gap-x-4 gap-y-8 sm:gap-x-6">
       <style>{REDUCED_MOTION_CSS}</style>
 
       {allPlans.map((plan, i) => {
@@ -257,6 +258,12 @@ function MobilePlanList({ plans: allPlans }: { plans: Plan[] }) {
   );
 }
 
+// Only the first three tiers show here — Grove/Woodland/Redwood exist in the
+// data (and still power BankPage/DeployServerModal elsewhere) but are
+// deliberately left out of this display for a cleaner three-card fan,
+// matching the reference design. Revisit if the plan lineup itself changes.
+const DISPLAYED_PLANS = plans.slice(0, 3);
+
 export function FriendsPhaseNotice() {
   return (
     <section id="pricing" className="border-b border-line-soft py-24">
@@ -274,22 +281,22 @@ export function FriendsPhaseNotice() {
         </p>
       </div>
 
-      <div className="mx-auto mt-16 max-w-[1400px] px-6">
+      <div className="mx-auto mt-16 max-w-3xl px-6">
         <p className="text-center text-[13px] font-semibold uppercase tracking-wider text-accent-400">
           Plans on offer
         </p>
         <p className="mx-auto mt-3 max-w-xl text-center text-[15px] leading-relaxed text-text-md">
-          Six tiers, priced the way they'll stay once pricing goes live for everyone. Have an invite?
+          Priced the way they'll stay once pricing goes live for everyone. Have an invite?
           You're running on one of these for $0 right now.
         </p>
 
         <div className="mt-14 hidden sm:block">
-          <PlanFan plans={plans} />
+          <PlanFan plans={DISPLAYED_PLANS} />
           <p className="mt-6 text-center text-[13px] text-text-lo">Click a card to feature it.</p>
         </div>
 
         <div className="mt-10">
-          <MobilePlanList plans={plans} />
+          <MobilePlanList plans={DISPLAYED_PLANS} />
         </div>
       </div>
     </section>
