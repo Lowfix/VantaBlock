@@ -31,6 +31,65 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-08-22 — Pricing section redesign: fanned-deck cards, real prices shown, click/hover/scroll interaction
+
+**What:** `FriendsPhaseNotice.tsx`'s plan grid replaced with an interactive "fanned deck of cards"
+layout (user-supplied AI mockup reference: 3 tilted side cards behind one upright, glowing center
+card) — scaled to all 6 real tiers instead of the 3 shown in the mockup. One plan is "featured"
+(centered, upright, full spec list, `shadow-glow-md`); the rest fan out at alternating angles
+behind it showing just icon/name/price. Clicking any card makes it the new featured one (state-driven
+re-fan, not a real DOM reorder); hovering a side card straightens its rotation, lifts it, and glows
+(`shadow-glow-sm`); the whole fan animates in from a collapsed/flattened pre-state via
+`IntersectionObserver` the first time the section scrolls into view. Mobile (`<640px`) gets a
+separate plain stacked list (`MobilePlanList`, same content, no fan/transform) rather than trying to
+force the deck effect into a narrow viewport.
+
+**Real prices are now shown** — a deliberate, user-confirmed reversal of this component's previous
+"no public pricing yet" stance. Rewrote the surrounding copy so it doesn't contradict the visible
+prices: reframed as "pricing is real and final, the *service* is what's still free" (invited friends
+run any tier at $0 today; the shown price is what it'll cost once invites open up more widely) rather
+than silently dropping the honest invite-only framing this component exists to carry.
+
+**Icon-per-tier** picked from `lucide-react` to match the Sprout→Sapling→Thicket→Grove→Woodland→
+Redwood growth naming, in increasing density/size: `Sprout`, `Leaf`, `Shrub` (a thicket really is a
+dense stand of shrubs), `TreeDeciduous`, `Trees`, `TreePine` (closest available icon to an actual
+conifer/redwood). All existing design tokens reused as instructed — `accent-*` scale,
+`--shadow-glow-sm`/`-md`, no new colors invented.
+
+**Reduced-motion handling, following this project's established pattern (not just a JS early-return):**
+this component drives its fan/hover/entrance purely through inline-style `transform`/`opacity` plus a
+Tailwind `transition-all` class, not a named `.animate-*` keyframe — so the AmbientBackground/
+FloatingVoxels lesson (unlayered `.animate-float` beats Tailwind's layered `motion-reduce:*` variant)
+doesn't directly apply, but the same "CSS-level guarantee, not just JS" principle does. Ships a scoped
+`<style>` block (`.vb-plan-card { transition: none !important; }` under
+`@media (prefers-reduced-motion: reduce)`) alongside the existing JS-level check (skip the
+`IntersectionObserver` and mark the fan "in view" immediately). Caught by the Playwright reduced-motion
+pass that this needed checking on the *correct* card — checking the first DOM card's opacity is
+misleading, since side cards legitimately sit below full opacity by design (they dim with distance
+from the featured card); the real assertion is the *featured* card hits opacity 1 immediately and no
+card is stuck at the pre-entrance opacity (0).
+
+**Verified with a real browser, not just a clean build** — `npx tsc -b --force` and `npm run build`
+both clean, then a throwaway Playwright install (`npm install playwright --no-save` in a scratch dir,
+cached locally, worked immediately) driving `chromium` against a local `npm run dev`: scrolled the
+section into view and screenshotted the entrance state; clicked a side card and confirmed
+`aria-pressed`/the rendered `<h3>` actually moved to the clicked plan (not just a visual check);
+confirmed the newly-featured card renders full spec content (price + specs + feature list); hovered a
+side card and screenshotted the straighten/lift/glow; a separate page with
+`page.emulateMedia({ reducedMotion: 'reduce' })` confirmed `getComputedStyle(...).transitionDuration`
+is actually `0s` (not just that the CSS rule exists) and that cards render at final opacity
+immediately; a 390px-viewport pass confirmed the mobile stacked list shows and the desktop fan
+(`.hidden.sm:block`) does not. Zero console/page errors across all three passes. Dev server and the
+scratch Playwright install both torn down afterward — confirmed via `Get-NetTCPConnection` which PID
+actually owned the port this session started (a second, pre-existing `vite` instance from another
+session's port 5173 was left running, only this session's port-5174 instance was killed).
+
+**See also:** `src/components/landing/FriendsPhaseNotice.tsx`, `src/mock-data/plans.ts` (unchanged —
+same 6 tiers/prices), `src/index.css` (tokens reused, nothing added), the AmbientBackground/
+FloatingVoxels entry below (`.animate-float`/`prefers-reduced-motion` precedent this follows).
+
+---
+
 ## 2026-08-22 — Code-side teardown: deleted the entire backend, reduced the app to a static landing page
 
 **What:** The code-side half of the full infra teardown (see the entries below and
