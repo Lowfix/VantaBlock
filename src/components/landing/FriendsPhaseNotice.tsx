@@ -55,18 +55,28 @@ const REDUCED_MOTION_CSS = `
   .vb-plan-card { transition: none !important; }
 }`;
 
+// Fixed pixel width for every card in the fan — the layered look below
+// depends on all cards sharing one width so the overlap math stays correct.
+const CARD_WIDTH = 280;
+// Horizontal distance between adjacent card centers. Deliberately less than
+// CARD_WIDTH so neighbors overlap (about a third of each card's width tucks
+// behind its neighbor) — a real "fanned deck," not cards with gaps between
+// them rotated in place.
+const CARD_X_STEP = 190;
+
 /**
- * Each card's rotation/vertical-offset is a fixed function of its own slot
- * (index) in tier order — NOT of which card is currently active. This is
- * what keeps the deck from ever going lopsided: the geometry never changes
- * when a card is clicked, only that one card's scale/glow/z-index does.
+ * Each card's rotation/position is a fixed function of its own slot (index)
+ * in tier order — NOT of which card is currently active. This is what keeps
+ * the deck from ever going lopsided: the geometry never changes when a card
+ * is clicked, only that one card's scale/glow/z-index does.
  */
-function fanSlot(index: number, total: number): { rotate: number; y: number } {
+function fanSlot(index: number, total: number): { rotate: number; x: number; y: number } {
   const center = (total - 1) / 2;
   const offset = index - center;
   return {
-    rotate: offset * 3, // gentle, alternating either side of center
-    y: Math.abs(offset) * 9, // shallow arc: outer slots sit slightly lower
+    rotate: offset * 9, // pronounced, alternating either side of center
+    x: offset * CARD_X_STEP, // overlapping horizontal spread
+    y: Math.abs(offset) * 34, // shallow arc: outer slots sit lower, like a hand of cards
   };
 }
 
@@ -76,12 +86,17 @@ interface CardStyle {
   opacity: number;
 }
 
-function getCardStyle(slot: { rotate: number; y: number }, isActive: boolean, isHovered: boolean, inView: boolean): CardStyle {
-  const scale = isActive ? 1.06 : isHovered ? 1.03 : 1;
+function getCardStyle(
+  slot: { rotate: number; x: number; y: number },
+  isActive: boolean,
+  isHovered: boolean,
+  inView: boolean
+): CardStyle {
+  const scale = isActive ? 1.08 : isHovered ? 1.04 : 1;
   // Popping "forward" is a small negative Y nudge plus scale/z-index/glow —
   // never a change to which slot the card occupies.
-  const y = slot.y - (isActive ? 10 : isHovered ? 4 : 0);
-  const rotate = isActive ? slot.rotate * 0.4 : slot.rotate;
+  const y = slot.y - (isActive ? 16 : isHovered ? 6 : 0);
+  const rotate = isActive ? 0 : slot.rotate;
 
   let entranceY = y;
   let entranceScale = scale;
@@ -96,7 +111,10 @@ function getCardStyle(slot: { rotate: number; y: number }, isActive: boolean, is
   }
 
   return {
-    transform: `translateY(${entranceY}px) rotate(${rotate}deg) scale(${entranceScale})`,
+    // `left: 50%` + `translateX(-50% + slot.x)` centers the whole fan in its
+    // container while placing each card at its own horizontal offset —
+    // that's what lets cards overlap instead of sitting in separate columns.
+    transform: `translateX(calc(-50% + ${slot.x}px)) translateY(${entranceY}px) rotate(${rotate}deg) scale(${entranceScale})`,
     zIndex: isActive ? 30 : isHovered ? 20 : 10,
     opacity,
   };
@@ -190,12 +208,17 @@ function PlanFan({ plans: allPlans }: { plans: Plan[] }) {
   const { ref, inView } = usePlanFanInView<HTMLDivElement>();
 
   return (
-    <div ref={ref} className="grid grid-cols-3 items-start gap-x-4 gap-y-8 sm:gap-x-6">
+    <div ref={ref} className="relative mx-auto h-[480px]" style={{ width: CARD_WIDTH + (allPlans.length - 1) * CARD_X_STEP + 60 }}>
       <style>{REDUCED_MOTION_CSS}</style>
 
       {allPlans.map((plan, i) => {
         const isActive = i === active;
         const isHovered = hovered === i;
+        // "Most popular" is a fixed label on a specific plan, not tied to
+        // which card is currently featured/active — Sapling always wears
+        // it here, independent of `plan.featured` (that flag belongs to
+        // Grove, which isn't part of this trimmed 3-tier display at all).
+        const isMostPopular = plan.id === "sapling";
         const Icon = TIER_ICONS[plan.id] ?? Sprout;
         const slot = fanSlot(i, allPlans.length);
         const style = getCardStyle(slot, isActive, isHovered, inView);
@@ -212,14 +235,14 @@ function PlanFan({ plans: allPlans }: { plans: Plan[] }) {
             aria-pressed={isActive}
             aria-label={isActive ? `${plan.name} plan, currently featured` : `Show ${plan.name} plan details`}
             className={cn(
-              "vb-plan-card relative flex w-full flex-col rounded-2xl border p-5 text-left transition-all duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400/60",
+              "vb-plan-card absolute left-1/2 top-0 flex flex-col rounded-2xl border p-5 text-left transition-all duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400/60",
               isActive
                 ? "border-accent-500/50 bg-panel-2 shadow-glow-md"
-                : "cursor-pointer border-line bg-panel/70 hover:border-accent-500/40 hover:bg-panel-2/70 hover:shadow-glow-sm"
+                : "cursor-pointer border-line bg-panel/90 backdrop-blur-sm hover:border-accent-500/40 hover:bg-panel-2/90 hover:shadow-glow-sm"
             )}
-            style={style}
+            style={{ ...style, width: CARD_WIDTH }}
           >
-            {plan.featured && (
+            {isMostPopular && (
               <span className="absolute -top-3 left-5 rounded-full bg-accent-500 px-2.5 py-0.5 text-[11px] font-semibold text-white">
                 Most popular
               </span>
@@ -237,15 +260,17 @@ function MobilePlanList({ plans: allPlans }: { plans: Plan[] }) {
     <div className="grid gap-5 sm:hidden">
       {allPlans.map((plan) => {
         const Icon = TIER_ICONS[plan.id] ?? Sprout;
+        // Same fixed-to-Sapling rule as the desktop fan — see PlanFan above.
+        const isMostPopular = plan.id === "sapling";
         return (
           <div
             key={plan.id}
             className={cn(
               "relative flex flex-col rounded-2xl border p-7",
-              plan.featured ? "border-accent-500/50 bg-panel-2 shadow-glow-md" : "border-line bg-panel/60"
+              isMostPopular ? "border-accent-500/50 bg-panel-2 shadow-glow-md" : "border-line bg-panel/60"
             )}
           >
-            {plan.featured && (
+            {isMostPopular && (
               <span className="absolute -top-3 left-7 rounded-full bg-accent-500 px-2.5 py-0.5 text-[11px] font-semibold text-white">
                 Most popular
               </span>
