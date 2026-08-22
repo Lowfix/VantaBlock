@@ -34,6 +34,18 @@ Do not assume "no real billing" means shortcuts are fine elsewhere — provision
 API calls, DNS, and the relay are all hitting real infrastructure and must be treated with the
 same care as a paid product.
 
+**The current Panel/Wings/backend infrastructure is itself a test rig, not the permanent
+setup — direct from the user, 2026-08-23.** Once real hardware is acquired, the plan is to wipe
+and rebuild Panel, Wings, and the rest of the backend infra entirely from scratch. This does
+**not** include the website — the VantaBlock React/Express app, its landing page, and its own
+`data.db` are the durable, kept asset; only Panel/Wings/the surrounding boxes are expected to be
+thrown away and redone. Keep treating every infra decision with real-product care regardless (see
+above) — the rebuild is a "when," not a license to be sloppy now — but don't be surprised if a
+config choice, a hardening fix, or a topology detail documented in INFRASTRUCTURE.md turns out to
+describe hardware that no longer exists by the time a future session reads it. When something in
+INFRASTRUCTURE.md looks stale against what you're actually seeing on the boxes, this is why —
+verify against the live box rather than assuming the doc is still current.
+
 ## Marketing copy: intentionally aspirational
 
 The site's marketing copy (Features.tsx, Hero.tsx, Pricing.tsx, AuthLayout.tsx, Footer.tsx,
