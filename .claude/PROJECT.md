@@ -21,6 +21,14 @@ is actually charged. Concretely:
 - Despite being free, **treat this as a real product** when building features: real support
   tickets (not fake success toasts), real account roles, real infra decisions. The user explicitly
   wants the free phase to still feel and operate like a legitimate company.
+- **Nobody is actually hosting on the platform yet** — every server currently on it is the user's
+  own test server. This is why the game-world/Wings-node backup gap (see INFRASTRUCTURE.md — only
+  the VantaBlock app's own `data.db`/`.env` are backed up; Panel's + the customer database's
+  MariaDB and the actual Minecraft world files on Wings nodes are not) is a **deliberate,
+  discussed-and-agreed deferral (2026-08-23)**, not an oversight — there's nothing real to lose
+  right now, and the user wants to build it properly once real storage (local + offsite) is in
+  place, rather than bolt something temporary on now. Don't "fix" this unprompted; it becomes
+  urgent specifically when real customers start hosting real servers, not before.
 
 Do not assume "no real billing" means shortcuts are fine elsewhere — provisioning, Pterodactyl
 API calls, DNS, and the relay are all hitting real infrastructure and must be treated with the
