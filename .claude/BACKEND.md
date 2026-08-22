@@ -17,8 +17,8 @@ git show <hash>:server/index.ts                # any file, as of any commit
 git show <hash>^:server/                        # the whole server/ tree, right before deletion
 ```
 
-Check `.claude/DEVLOG.md` for the exact commit that deleted `server/` if you need the last commit
-where it still existed in full.
+`server/` was deleted in commit `584357a` — `git show 584357a^:server/` (note the `^`, the parent
+commit) gives the whole tree exactly as it stood right before deletion.
 
 **What existed, in one paragraph, for context (not as a spec to build against):** an Express +
 better-sqlite3 (WAL mode) API, no migrations folder — `db.ts` itself was the migration system.

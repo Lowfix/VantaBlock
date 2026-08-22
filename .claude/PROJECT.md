@@ -44,9 +44,10 @@ SQLite (`data.db`), Pterodactyl API wrapper, provisioning, owner/admin/member ro
 flags, a six-tier plan lineup, a request-vs-instant-deploy approval flow, an internal support
 ticket system, Stripe integration). All of that is gone from this repo now — deleted in full,
 not archived here. If any of those specifics matter again (rebuilding the authenticated app,
-understanding a past decision), they're recoverable from git history before commit `<the teardown
-commit — check DEVLOG.md for its hash>`, not from this file or BACKEND.md, which now only
-describes what *used* to exist.
+understanding a past decision), they're recoverable from git history before commit `584357a`
+("Code-side teardown: delete the entire backend, reduce app to static landing page") — the last
+commit before `server/` and everything supporting it existed in full — not from this file or
+BACKEND.md, which now only describe what *used* to exist.
 
 The teardown was explicit and immediate, not deferred: an earlier plan (still visible in git
 history, commit `ab95daa`) was to keep the website/database as a durable asset and only rebuild
