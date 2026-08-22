@@ -3,6 +3,7 @@ import { PublicNavbar } from "../components/layout/PublicNavbar";
 import { Footer } from "../components/layout/Footer";
 import { Hero } from "../components/landing/Hero";
 import { Features } from "../components/landing/Features";
+import { FAQ } from "../components/landing/FAQ";
 import { FriendsPhaseNotice } from "../components/landing/FriendsPhaseNotice";
 import { CTASection } from "../components/landing/CTASection";
 import { AmbientBackground } from "../components/landing/AmbientBackground";
@@ -63,6 +64,7 @@ export function LandingPage() {
       <Hero />
       <Features />
       <FriendsPhaseNotice />
+      <FAQ />
       <CTASection />
       <Footer />
     </div>
