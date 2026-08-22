@@ -1,0 +1,89 @@
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+services:
+  database:
+    image: mariadb:10.11
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - ./data/db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "panel"
+      MYSQL_USER: "pterodactyl"
+      MYSQL_PASSWORD: "${PANEL_DB_PASSWORD}"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  cache:
+    image: redis:alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  # Dedicated MariaDB instance for customer-created "managed databases" (the
+  # Databases tab in the server panel) — deliberately separate from Panel's own
+  # `database` above, so customer data (LuckPerms tables, plugin data, etc.) never
+  # shares a MySQL instance with Panel's internal state. Registered in Panel as a
+  # Database Host (Admin -> Databases) pointing at this box's LAN IP:3307, since
+  # the actual game server process (on the separate Wings/Main Node box) connects
+  # to it directly over the network, not just Panel.
+  customer-db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./data/customer-db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "${CUSTOMER_DB_ROOT_PASSWORD}"
+      MYSQL_ROOT_HOST: "%"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  panel:
+    image: ghcr.io/pterodactyl/panel:latest
+    restart: unless-stopped
+    network_mode: "host"
+    depends_on:
+      database:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    volumes:
+      - ./data/panel-var:/app/var/
+      - ./data/panel-nginx:/etc/nginx/http.d/
+      - ./data/panel-logs:/app/storage/logs
+      - ./panel-client.cnf:/etc/my.cnf.d/client.cnf:ro
+    environment:
+      APP_URL: "${APP_URL}"
+      APP_TIMEZONE: "UTC"
+      APP_ENVIRONMENT_ONLY: "false"
+      TRUSTED_PROXIES: "*"
+      MAIL_FROM: "noreply@vantablock.local"
+      MAIL_DRIVER: "log"
+      CACHE_DRIVER: "redis"
+      SESSION_DRIVER: "redis"
+      QUEUE_DRIVER: "redis"
+      REDIS_HOST: "127.0.0.1"
+      DB_HOST: "127.0.0.1"
+      DB_PORT: "3306"
+      DB_DATABASE: "panel"
+      DB_USERNAME: "pterodactyl"
+      DB_PASSWORD: "${PANEL_DB_PASSWORD}"
+    # Note: Wings runs natively inside the "Ubuntu" WSL2 distro (see /etc/pterodactyl
+    # and the wings.service systemd unit there), not as a container here. Docker-based
+    # Wings hit an unfixable Docker-outside-of-Docker bind-mount path mismatch.

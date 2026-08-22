@@ -1,0 +1,37 @@
+info:
+  name: "VantaBlock Theme"
+  identifier: "vantablock"
+  description: "Recolors the panel to match the VantaBlock website's violet and near-black palette."
+  flags: ""
+  version: "1.0"
+  target: "rolling"
+  author: "VantaBlock"
+  icon: ""
+  website: ""
+
+admin:
+  view: "view.blade.php"
+  controller: ""
+  css: ""
+  wrapper: ""
+
+dashboard:
+  css: "root.css"
+  wrapper: ""
+  components: ""
+
+data:
+  directory: ""
+  public: ""
+  console: ""
+
+requests:
+  views: ""
+  app: ""
+  routers:
+    application: ""
+    client: ""
+    web: ""
+
+database:
+  migrations: ""

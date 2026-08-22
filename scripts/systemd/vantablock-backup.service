@@ -1,0 +1,8 @@
+[Unit]
+Description=VantaBlock database backup
+Documentation=file:/opt/vantablock/scripts/backup-db.sh
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/vantablock
+ExecStart=/opt/vantablock/scripts/backup-db.sh
