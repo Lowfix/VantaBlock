@@ -183,10 +183,32 @@ untouched, confirmed by its unchanged uptime. And **recreating `cache` drops eve
 (Redis is the session store, that container has no volume), so Panel UI users get signed out — VantaBlock
 logins are JWT cookies and are unaffected, as are running game servers.
 
-`3307` (customer-db) is deliberately still on `0.0.0.0` — the game-server process on the separate Main
-Node connects to it directly over the network, so it has to be reachable off-box. But re-read the
-`MYSQL_ROOT_HOST: "%"` justification above with the Tailscale row in mind: "LAN-only" was doing
-load-bearing work in that argument and it was never quite true.
+**`3307` (customer-db) stays on `0.0.0.0` by design, but `root@%` is gone — fixed 2026-08-22.**
+The port itself has to remain reachable off-box: the game-server process on the separate Main Node
+connects to it directly over the network. What was *not* justified was `MYSQL_ROOT_HOST: "%"`, which
+let MariaDB **root** authenticate from any host that could reach the port. The old note here flagged
+that its "LAN-only" defence "was never quite true" given the Tailscale row above — that caveat is now
+resolved, not by closing the port but by scoping the account.
+
+Fix: `RENAME USER 'root'@'%' TO 'root'@'192.168.1.248'` (preserves password and grants atomically).
+The key insight is that **game servers never connect as root** — Pterodactyl creates a per-database
+user per customer database, and root is used only by *Panel*, which reaches the container from the
+host and therefore presents as `192.168.1.248`. So scoping root touches the game-server data path
+zero times. `root@localhost` is deliberately left in place as the recovery route via `docker exec`.
+
+Verified after the change: from another machine on the LAN the server now answers
+`ERROR 1130: Host '<ip>' is not allowed to connect` as its *first packet* (rejected at host level,
+before any password check), while a host-network client still connects as `root@192.168.1.248` and a
+full `CREATE DATABASE` + `CREATE USER` + `GRANT` + `DROP` cycle still succeeds — i.e. the customer
+database feature still works.
+
+**Still open (this fix does not cover it):** the port remains open to the whole LAN/tailnet, and
+Pterodactyl creates customer database users with a "Connections From" host that defaults to `%`, so
+individual customer database credentials may still be usable from anywhere that can reach 3307. That
+residual needs the source-IP firewall restriction to `192.168.1.113`, which **cannot be done from an
+agent session**: `glitch` has no passwordless sudo, and neither `iptables` nor `ufw` exists in its
+PATH. It needs the user at a root shell. Currently moot in practice — zero customer databases are
+provisioned — but it is the reason this entry is a partial fix rather than a complete one.
 
 **Pterodactyl's database seeder wipes custom egg edits:**
 `docker compose up -d panel` (needed whenever a `.env` change requires a full container recreate —

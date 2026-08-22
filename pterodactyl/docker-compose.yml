@@ -47,7 +47,19 @@ services:
       - ./data/customer-db:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: "${CUSTOMER_DB_ROOT_PASSWORD}"
-      MYSQL_ROOT_HOST: "%"
+      # Panel is the ONLY thing that connects as root here (to create/drop customer
+      # databases and their per-database users); it reaches this container from the
+      # host, so it presents as 192.168.1.248. Game servers on the Main Node connect
+      # as the per-database users, never as root — so scoping root costs nothing
+      # functionally. This was "%" until 2026-08-22, which meant MariaDB root was
+      # authenticable from any host that could reach the published 3307 port.
+      #
+      # NOTE: this variable only takes effect on FIRST init of an empty data volume.
+      # The running database was fixed in place with
+      #   RENAME USER 'root'@'%' TO 'root'@'192.168.1.248';
+      # so this line exists to stop the hole reappearing if ./data/customer-db is ever
+      # rebuilt from scratch. Changing it does NOT require recreating the container.
+      MYSQL_ROOT_HOST: "192.168.1.248"
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s

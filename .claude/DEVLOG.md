@@ -30,6 +30,57 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-08-22 — customer-db (port 3307): MariaDB `root@%` scoped to Panel's address — partial fix, firewall part still needs a root shell
+
+**What:** `pterodactyl-customer-db-1` (the MariaDB backing Panel's customer "Database" feature) had
+`MYSQL_ROOT_HOST: "%"` on a port published to `0.0.0.0`, so **MariaDB root was authenticable from any
+host that could reach 3307**. Confirmed from another machine: the port answered with a real
+`5.5.5-10.11.18-MariaDB-ubu2204` greeting. Fixed with
+`RENAME USER 'root'@'%' TO 'root'@'192.168.1.248'` (preserves password and grants atomically).
+
+**Framing correction — this was NOT a third "missed" exposure.** It was routed in as an oversight
+alongside the 3306/6379 fixes, but INFRASTRUCTURE.md already documented 3307 as a *deliberate*
+exception (the Main Node connects over the network) and had already flagged this exact concern, in
+writing, that the `MYSQL_ROOT_HOST: "%"` defence leaned on "LAN-only" and "was never quite true"
+given Tailscale. Known-and-questioned, not missed.
+
+**The insight that made a no-root fix possible:** the prescribed fix was a source-IP firewall
+allowlist, which **cannot be done from an agent session** — `glitch` has no passwordless sudo and
+neither `iptables` nor `ufw` is even in its PATH. But game servers **never connect as root**:
+Pterodactyl creates a per-database user per customer database, and root is used only by *Panel*,
+which reaches the container from the host and so presents as `192.168.1.248`. So scoping root closes
+the crown-jewel exposure while touching the game-server data path zero times — which also sidesteps
+the "verify it still works from a real Wings node" step, which was impossible anyway (INFRASTRUCTURE.md
+records that there is no SSH path to the Main Node, a deliberately accepted gap).
+
+**Verified after the change** — off-box rejection proven the same way the exposure was:
+- From another LAN machine, the server's **first packet** is now `ERROR 1130: Host '192.168.1.196' is
+  not allowed to connect` — rejected at host level, before any password check.
+- Host-network client (what Panel is) still connects as `root@192.168.1.248`.
+- `root@localhost` still works via `docker exec` — the deliberate recovery path.
+- Full `CREATE DATABASE` + `CREATE USER`(scoped to 192.168.1.113) + `GRANT` + `DROP` cycle succeeds,
+  so the customer-database feature genuinely still works, not just "the port looks right".
+
+**Two process notes worth keeping.** First, my *initial* reachability probe reported
+"closed/unreachable" — a bad bash `/dev/tcp` test whose socket read fell through to the failure
+branch. Trusting it would have produced a confident, wrong "this is a non-issue" report and the hole
+would have stayed open; re-probing in node showed a live MariaDB banner. **A negative result from a
+hand-rolled probe deserves the same scepticism as a positive one.** Second, a later attempt to
+hand-implement the MySQL handshake off-box also misparsed — it was reading an ERR packet as a
+greeting. Using a real `mariadb` client from a non-allowed source (a bridge container, `172.25.0.1`)
+gave a clean, unambiguous `ERROR 1130` instead. Reach for a real client before writing wire protocol.
+
+**Still open, deliberately:** the port stays open to the LAN/tailnet, and Pterodactyl creates customer
+database users with a "Connections From" host defaulting to `%`, so individual customer DB credentials
+may remain usable from anywhere that can reach 3307. Closing that needs the source-IP firewall rule to
+`192.168.1.113` — **user at a root shell**. Moot today (zero customer databases provisioned) but this
+entry is a partial fix, not a complete one.
+
+**See also:** [INFRASTRUCTURE.md](INFRASTRUCTURE.md) (3307 section, rewritten),
+`/opt/pterodactyl/docker-compose.yml` (`customer-db`, still `MYSQL_ROOT_HOST: "%"` — see below).
+
+---
+
 ## 2026-08-22 — `pterodactyl_client_key` encryption at rest, step 2: existing plaintext rows migrated, verified live
 
 **What:** Migrated the last plaintext `pterodactyl_client_key` rows to encrypted, closing out the
