@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent, MouseEvent } from "react";
-import { Link } from "react-router-dom";
 import {
   Users,
   Check,
@@ -12,7 +10,6 @@ import {
   TreePine,
 } from "lucide-react";
 import { plans, type Plan } from "../../mock-data/plans";
-import { buttonVariants } from "../ui/Button";
 import { cn } from "../../lib/cn";
 
 // Stands in for <Pricing /> while Vantablock is running as an invite-only,
@@ -196,20 +193,6 @@ function PlanCardBody({ plan, icon: Icon, expanded }: { plan: Plan; icon: typeof
           ))}
         </ul>
       </div>
-
-      {/* Sits right below the spec block when collapsed (the checklist
-          above has zero height/margin) and below the full checklist once
-          expanded, by virtue of JSX order alone — no separate collapsed vs.
-          expanded placement needed. Stops propagation so clicking it doesn't
-          also fire the card's own "feature this card" click handler on the
-          way to navigating away. */}
-      <Link
-        to={`/get-started?plan=${plan.id}`}
-        onClick={(e: MouseEvent) => e.stopPropagation()}
-        className={buttonVariants({ variant: expanded ? "primary" : "outline", size: "sm", className: "mt-4 w-full" })}
-      >
-        Deploy {plan.name}
-      </Link>
     </>
   );
 }
@@ -225,7 +208,7 @@ function PlanFan({ plans: allPlans }: { plans: Plan[] }) {
   const { ref, inView } = usePlanFanInView<HTMLDivElement>();
 
   return (
-    <div ref={ref} className="relative mx-auto h-[560px]" style={{ width: CARD_WIDTH + (allPlans.length - 1) * CARD_X_STEP + 60 }}>
+    <div ref={ref} className="relative mx-auto h-[480px]" style={{ width: CARD_WIDTH + (allPlans.length - 1) * CARD_X_STEP + 60 }}>
       <style>{REDUCED_MOTION_CSS}</style>
 
       {allPlans.map((plan, i) => {
@@ -240,23 +223,11 @@ function PlanFan({ plans: allPlans }: { plans: Plan[] }) {
         const slot = fanSlot(i, allPlans.length);
         const style = getCardStyle(slot, isActive, isHovered, inView);
 
-        // A plain <button> can't validly contain the interactive <Link>
-        // that PlanCardBody now renders (a Deploy button) — nested
-        // interactive content is invalid HTML and unreliable to click
-        // across browsers. Same "select this card" behavior via
-        // role="button" + tabIndex + explicit Enter/Space handling instead.
         return (
-          <div
+          <button
             key={plan.id}
-            role="button"
-            tabIndex={0}
+            type="button"
             onClick={() => setActive(i)}
-            onKeyDown={(e: KeyboardEvent) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setActive(i);
-              }
-            }}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
             onFocus={() => setHovered(i)}
@@ -264,10 +235,10 @@ function PlanFan({ plans: allPlans }: { plans: Plan[] }) {
             aria-pressed={isActive}
             aria-label={isActive ? `${plan.name} plan, currently featured` : `Show ${plan.name} plan details`}
             className={cn(
-              "vb-plan-card absolute left-1/2 top-0 flex cursor-pointer flex-col rounded-2xl border p-5 text-left transition-all duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400/60",
+              "vb-plan-card absolute left-1/2 top-0 flex flex-col rounded-2xl border p-5 text-left transition-all duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400/60",
               isActive
                 ? "border-accent-500/50 bg-panel-2 shadow-glow-md"
-                : "border-line bg-panel/90 backdrop-blur-sm hover:border-accent-500/40 hover:bg-panel-2/90 hover:shadow-glow-sm"
+                : "cursor-pointer border-line bg-panel/90 backdrop-blur-sm hover:border-accent-500/40 hover:bg-panel-2/90 hover:shadow-glow-sm"
             )}
             style={{ ...style, width: CARD_WIDTH }}
           >
@@ -277,7 +248,7 @@ function PlanFan({ plans: allPlans }: { plans: Plan[] }) {
               </span>
             )}
             <PlanCardBody plan={plan} icon={Icon} expanded={isActive} />
-          </div>
+          </button>
         );
       })}
     </div>

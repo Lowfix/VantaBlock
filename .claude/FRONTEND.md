@@ -4,47 +4,27 @@
 for the old authenticated dashboard/console/billing UI this file used to document, that's gone;
 see PROJECT.md's History section and git history before the 2026-08-22 teardown commit.**
 
-React 19 + TypeScript + Vite 8 + Tailwind 4 (via `@tailwindcss/vite`). No state management library,
-no Context. Two pages as of 2026-08-22 (see below) — `react-router-dom` was fully removed in the
-teardown and then reintroduced, minimally, when the second page became genuinely needed (see
-DEVLOG.md's "Client-side routing reintroduced" entry) — don't add more router surface (data
-routers, loaders, nested layouts) than the two flat `<Route>`s currently use unless a real need
-shows up.
+React 19 + TypeScript + Vite 8 + Tailwind 4 (via `@tailwindcss/vite`). No router, no state
+management library, no Context — the whole app is one page rendering statically.
 
 ## Folder layout
 
 ```
 src/
-  pages/LandingPage.tsx     The marketing page (still the site's real content)
-  pages/GetStartedPage.tsx  Mock signup/login page — NOT wired to any backend, see below
-  components/landing/       Hero, Features, FriendsPhaseNotice, CTASection, AmbientBackground
-  components/layout/        PublicNavbar, Footer, Logo
-  components/illustrations/ VoxelIsland, FloatingVoxels (decorative, parallax-driven)
-  components/ui/            Button, Badge — the only two primitives still in use
-  lib/                      cn(), useParallax, useElementHeight — small, dependency-free helpers
-  mock-data/plans.ts        The only surviving mock-data file — real plan-tier content, not fake data
+  pages/LandingPage.tsx   The only page
+  components/landing/     Hero, Features, FriendsPhaseNotice, CTASection, AmbientBackground
+  components/layout/      PublicNavbar, Footer, Logo
+  components/illustrations/  VoxelIsland, FloatingVoxels (decorative, parallax-driven)
+  components/ui/          Button, Badge — the only two primitives still in use
+  lib/                    cn(), useParallax, useElementHeight — small, dependency-free helpers
+  mock-data/plans.ts      The only surviving mock-data file — real plan-tier content, not fake data
 ```
 
 ## `App.tsx` / `main.tsx`
 
-`App.tsx` wraps `<BrowserRouter><Routes>` around two routes: `/` (`LandingPage`) and `/get-started`
-(`GetStartedPage`). Deliberately minimal — a plain `<Route>` list, no data routers/loaders, no
-providers. `main.tsx` is untouched boilerplate (`createRoot` + `<StrictMode>`). **Cloudflare Pages
-needs `public/_redirects` (`/*  /index.html  200`) for this to work** — without it, a direct load
-or refresh of `/get-started` 404s, since Pages serves static files with no knowledge of
-client-side routes. If a third page is ever needed, this is already the point to extend, not
-reconsider — the router is back for good reason, see the DEVLOG entry.
-
-## `GetStartedPage.tsx` — mock signup/login, not wired to anything real
-
-Reached from every plan card's "Deploy {plan}" button (`FriendsPhaseNotice.tsx`) via
-`/get-started?plan={plan.id}`, and directly. Adapted from the pre-teardown
-`LoginPage.tsx`/`RegisterPage.tsx`/`AuthLayout.tsx` (recoverable via `git show 584357a^:...`) with
-every real bit stripped — no `fetch`, no auth context, no OAuth. One component, a local `mode`
-toggle covers both "sign up" and "log in" framing. Submitting either form never fakes success or a
-logged-in state — it swaps to an explicit "this is a preview, nothing was submitted" banner. If
-real accounts ever come back, this is the page to rewire, not a reason to assume auth already
-exists elsewhere.
+`App.tsx` renders `<LandingPage />` directly — no `<Routes>`, no providers. `main.tsx` is
+untouched boilerplate (`createRoot` + `<StrictMode>`). If a second page is ever genuinely needed,
+that's the point to reach for a router again — don't add one preemptively for a one-page site.
 
 ## `LandingPage.tsx`
 
@@ -62,12 +42,10 @@ There is currently no backend, so nothing here submits data or requires a sessio
 
 - `PublicNavbar`'s "Get started", Hero's "View pricing", and `CTASection`'s "View plans" all
   scroll to `FriendsPhaseNotice`'s `#pricing` section (`<a href="#pricing">`) — informational, not
-  a signup action. **Left alone on purpose** when the per-card Deploy buttons below were added —
-  this task was scoped to the plan cards only, not a site-wide CTA rewire.
-- `FriendsPhaseNotice`'s plan cards each have a "Deploy {plan.name}" button/link
-  (`PlanCardBody`, shared by the desktop fan and the mobile stacked list) to
-  `/get-started?plan={plan.id}` — the mock signup/login page described above. Not a real
-  deploy/invite/request flow; the destination is explicit about that.
+  a signup action.
+- `FriendsPhaseNotice`'s plan cards no longer have a "Request {plan}" button — there's no invite
+  or request system to submit to anymore. Same reasoning for Hero's old "Deploy your server"
+  button and `FriendsPhaseNotice`'s old "I have an invite code" button, both removed.
 - `Footer`'s column links (Product/Company/Resources/Legal) are pre-existing placeholder anchors
   (`/#`) — not part of the teardown, not currently wired to anything real either.
 
