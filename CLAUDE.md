@@ -41,10 +41,11 @@ Detailed docs live in `.claude/` — **read the relevant one(s) before making no
   describes what the product is meant to be, not any currently-running infrastructure (there
   currently isn't any). Already corrected-then-reverted once at the user's explicit request on the
   "does this match real hardware" question; don't change it again without being asked.
-- **The legal documents (`src/legal/`) are unreviewed drafts.** Written 2026-08-29 for a
-  California sole proprietor; `src/legal/entity.ts` still has TODO placeholders (`[County]`,
-  `*@vantablock.example`) that must be real before a push takes them live, and the whole set
-  should get an attorney's read. Don't quietly change the substantive choices recorded in the
+- **The legal documents (`src/legal/`) are unreviewed drafts, hidden in production.**
+  `LEGAL_PAGES_ENABLED` in `src/config.ts` is `import.meta.env.DEV` — visible on `npm run dev`,
+  off on the deployed site — until `src/legal/entity.ts`'s TODO placeholders (`[County]`,
+  `*@vantablock.example`) are real and the set has had an attorney's read; flip it to `true` to
+  launch. Don't quietly change the substantive choices recorded in the
   DEVLOG entry (refund triggers, age, venue, grace/retention periods) — those were the user's.
 - **This is a real git repo** (`github.com/Lowfix/VantaBlock`, `main`). Pushing has needed the
   user's explicit confirmation each session so far — don't assume standing permission.

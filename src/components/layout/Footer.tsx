@@ -2,13 +2,15 @@ import { Link } from "react-router-dom";
 import { Send, MessageCircle, Code2 } from "lucide-react";
 import { Logo } from "./Logo";
 import { LEGAL_DOCS } from "../../legal";
+import { LEGAL_PAGES_ENABLED } from "../../config";
 
 // Trimmed on 2026-08-29 to just Product + Legal: the Company column (About/
 // Careers/Blog/Contact), the Resources column (Knowledge Base/Modpack Guides/
 // API Docs/Affiliate Program) and Product's "Status Page" were all dropped
 // until there's something real behind them — don't re-add placeholders for
 // them. The Legal column is generated from src/legal's LEGAL_DOCS, so adding
-// or renaming a policy there updates the footer automatically.
+// or renaming a policy there updates the footer automatically — and it's
+// hidden entirely while LEGAL_PAGES_ENABLED is off (see src/config.ts).
 const columns = [
   {
     title: "Product",
@@ -19,10 +21,14 @@ const columns = [
       { label: "FAQ", href: "/#faq" },
     ],
   },
-  {
-    title: "Legal",
-    links: LEGAL_DOCS.map((d) => ({ label: d.title, href: `/legal/${d.slug}` })),
-  },
+  ...(LEGAL_PAGES_ENABLED
+    ? [
+        {
+          title: "Legal",
+          links: LEGAL_DOCS.map((d) => ({ label: d.title, href: `/legal/${d.slug}` })),
+        },
+      ]
+    : []),
 ];
 
 export function Footer() {

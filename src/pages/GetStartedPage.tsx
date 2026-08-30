@@ -7,6 +7,7 @@ import { VoxelIsland } from "../components/illustrations/VoxelIsland";
 import { buttonVariants } from "../components/ui/Button";
 import { plans } from "../mock-data/plans";
 import { cn } from "../lib/cn";
+import { LEGAL_PAGES_ENABLED } from "../config";
 
 // Mock signup/login page — NOT wired to any backend. Adapted from the old
 // LoginPage.tsx/RegisterPage.tsx/AuthLayout.tsx (deleted in the 2026-08-22
@@ -136,7 +137,7 @@ export function GetStartedPage() {
                     {mode === "signup" ? "Create account" : "Log in"}
                   </button>
 
-                  {mode === "signup" && (
+                  {mode === "signup" && LEGAL_PAGES_ENABLED && (
                     <p className="text-center text-[12px] leading-relaxed text-text-lo">
                       By creating an account you confirm you're 18 or older and agree to the{" "}
                       <Link to="/legal/terms" className="text-accent-400 hover:text-accent-300">Terms of Service</Link>,{" "}

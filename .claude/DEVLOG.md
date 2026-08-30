@@ -31,6 +31,29 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-08-29 — Legal pages hidden in production behind `LEGAL_PAGES_ENABLED`
+
+**What:** After the legal drafts were pushed live with their `[County]` / `*@vantablock.example`
+placeholders showing, the user asked to disable the legal section in production for now. Added
+`src/config.ts` with `LEGAL_PAGES_ENABLED = import.meta.env.DEV` — on in `npm run dev` (so the
+documents can keep being worked on locally), off in the production build Cloudflare deploys. Three
+call sites: `App.tsx` (flag off → `/legal/*` `<Navigate>`s to `/`), `Footer.tsx` (Legal column
+omitted), `GetStartedPage.tsx` (consent line hidden). Flip the constant to `true` to launch.
+
+**Nice side effect:** because the flag is a build-time constant, Vite tree-shakes `LegalPage` and
+all four documents out of the production bundle — 463KB → 400KB — so nothing about the drafts
+ships until they're switched on.
+
+**Verified** with Playwright against both `vite preview` (production build, port 4173) and the dev
+server: PROD — `/legal/terms` and `/legal` land on `/`, footer headings are `["Product"]` only,
+zero `/legal/` links, no consent line, no errors; DEV — `/legal/terms` renders the Terms, footer has
+Product + Legal, consent line present.
+
+**See also:** `src/config.ts`, FRONTEND.md ("LegalPage.tsx + src/legal/"), CLAUDE.md must-know
+bullet, the legal-pages entry directly below.
+
+---
+
 ## 2026-08-29 — Legal pages: Terms, Privacy, Refunds, Acceptable Use (drafts) + `/legal/:slug`
 
 **What:** Four legal documents as data in `src/legal/` (`terms.tsx`, `privacy.tsx`, `refunds.tsx`,

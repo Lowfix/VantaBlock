@@ -101,6 +101,13 @@ at the top of the script). Nothing map-related is fetched at runtime.
 
 ## `LegalPage.tsx` + `src/legal/` — the four legal documents
 
+**Gated behind `LEGAL_PAGES_ENABLED` in `src/config.ts` — currently `import.meta.env.DEV`, i.e. ON
+in `npm run dev`, OFF in the production build Cloudflare deploys.** While off, `/legal/*` routes
+`<Navigate>` home, the footer has no Legal column, and the signup consent line is hidden; Vite's
+dead-code elimination also drops the documents from the production bundle (~60KB). Flip the
+constant to `true` to launch them (after filling `entity.ts` and getting a review — see below).
+Three call sites: `App.tsx`, `Footer.tsx`, `GetStartedPage.tsx`.
+
 `/legal/terms`, `/legal/privacy`, `/legal/refunds`, `/legal/acceptable-use`. One page component
 renders whichever `LegalDocument` matches the slug: title, "Last updated", a plain-language "short
 version" box (`summary` bullets — with a line saying the full text controls), a sticky numbered
