@@ -46,9 +46,11 @@ top. This is what makes `/#pricing`-style links work from *other* pages (navbar/
 nav/footer href is therefore root-relative (`/#features`, never bare `#features`) and rendered via
 `<Link>`; the only plain `<a href="/#">`s left are the footer's social icons.
 
-**Cloudflare Pages needs `public/_redirects` (`/*  /index.html  200`) for any of this to work** —
-without it, a direct load or refresh of `/locations` or `/get-started` 404s, since Pages serves
-static files with no knowledge of client-side routes.
+**Do NOT add a `public/_redirects` file.** Production is a git-connected Cloudflare *Worker* with
+static assets (not a Pages project), and its single-page-application fallback is configured on
+the Cloudflare side — unknown paths like `/locations` already return `index.html` with a 200. A
+`/*  /index.html  200` rule in `_redirects` made every deploy from 2026-08-22 to 2026-08-29 fail
+silently while the site sat on an old build; see the 2026-08-29 DEVLOG entry.
 
 ## `AmbientPage.tsx` — the shared page shell
 

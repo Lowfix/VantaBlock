@@ -31,6 +31,42 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-08-29 — Production had been stuck on an Aug 22 build: `public/_redirects` fails the Workers deploy
+
+**What:** User reported the new pages weren't on production. GitHub check-runs
+(`api.github.com/repos/Lowfix/VantaBlock/commits/<sha>/check-runs`, repo is public) showed
+"Workers Builds: vantablock" `conclusion: failure` for every commit since `73bd8cd` (2026-08-22)
+and `success` for `d7e4f22` just before it; the live bundle at `https://vantablock.net` fingerprinted
+as `d7e4f22` (has "Most popular" / "Click a card to feature it", none of the Deploy buttons,
+Locations page, or legal work). So five pushes had "deployed" nothing, silently — nobody had
+checked the build status after pushing.
+
+**Root cause:** `public/_redirects` (`/*  /index.html  200`), added in `73bd8cd` for SPA routing
+on the assumption this was a Cloudflare *Pages* project. It's actually a git-connected Cloudflare
+*Worker* with static assets (the check-run's details URL is `/workers/services/view/vantablock/…`),
+whose single-page-application fallback is already configured on the Cloudflare side — a request
+for `/definitely-not-a-real-path` on the OLD build returned `index.html` with status 200, so the
+file was never needed. On Workers deploys wrangler validates `_redirects` strictly, and a catch-all
+proxy to `/index.html` (which itself matches `/*`) trips its "Infinite loop detected" rule.
+
+**What ruled everything else out first** (worth knowing so nobody repeats it): `npm ci` from the
+committed lockfile is clean; no case-sensitivity import mismatches (Windows hides those, Linux
+doesn't); a full Linux/Node 22 repro inside WSL (throwaway Node tarball in `/tmp`, fresh clone,
+`npm ci && npm run build`) succeeded and produced the byte-identical bundle hash; `wrangler deploy
+--dry-run --assets ./dist` passes — but dry-run does NOT validate `_redirects` (a deliberately
+garbage file also passed), so that test proves nothing about this failure. `gh` isn't installed
+and Docker Desktop isn't running on this machine; the public GitHub API and WSL were enough.
+
+**Fix:** `git rm public/_redirects`. Nothing else — SPA routing keeps working via the Worker's own
+fallback. Docs corrected: FRONTEND.md (which told future sessions the file was *required*),
+WORKFLOWS.md deploy section (Worker not Pages; how to check a build went green), CLAUDE.md
+must-know bullet.
+
+**Lesson:** a push is not a deploy. After every push, check the check-run conclusion — it's one
+`curl`, and it would have caught this a week earlier.
+
+---
+
 ## 2026-08-29 — Legal pages hidden in production behind `LEGAL_PAGES_ENABLED`
 
 **What:** After the legal drafts were pushed live with their `[County]` / `*@vantablock.example`

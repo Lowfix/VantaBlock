@@ -47,6 +47,10 @@ Detailed docs live in `.claude/` — **read the relevant one(s) before making no
   `*@vantablock.example`) are real and the set has had an attorney's read; flip it to `true` to
   launch. Don't quietly change the substantive choices recorded in the
   DEVLOG entry (refund triggers, age, venue, grace/retention periods) — those were the user's.
+- **Never add `public/_redirects`.** Production is a Cloudflare Worker (static assets) whose SPA
+  fallback is configured dashboard-side; a `/* /index.html 200` rule breaks the deploy and the
+  site silently stays on the old build. After any push, confirm the build went green (see
+  WORKFLOWS.md's deploy section for the one-line check).
 - **This is a real git repo** (`github.com/Lowfix/VantaBlock`, `main`). Pushing has needed the
   user's explicit confirmation each session so far — don't assume standing permission.
 - Windows host; both a PowerShell tool and a Bash (Git Bash) tool are available — they are **not**

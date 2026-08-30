@@ -33,6 +33,18 @@ preview` serves that build locally to sanity-check the production bundle before 
 
 ## Deploy — Cloudflare Pages, not a custom script
 
+**Correction (2026-08-29): it's a git-connected Cloudflare *Worker* with static assets, built by
+"Workers Builds", not a Pages project** — same push-to-`main` workflow, but two things follow:
+(1) SPA fallback for client-side routes is configured on the Worker in the dashboard, so **never add
+`public/_redirects`** — a `/* /index.html 200` rule fails the Workers deploy (every push from
+2026-08-22 to 2026-08-29 failed this way and production silently stayed on the last good build);
+(2) a push is not a deploy until the build goes green — **check it**: the repo is public, so
+`curl -s https://api.github.com/repos/Lowfix/VantaBlock/commits/<sha>/check-runs` shows the
+"Workers Builds: vantablock" run with `conclusion: success|failure` and a `details_url` to the
+build log (dashboard login needed for the log itself). Live site: `https://vantablock.net`; the
+served bundle name in its HTML (`/assets/index-<hash>.js`) can be compared against a local
+`npm run build` of the same commit — the hash is deterministic across machines.
+
 Deploys automatically from GitHub: Cloudflare Pages watches `main` on
 `github.com/Lowfix/VantaBlock`, builds with `npm run build`, and serves `dist/`. **"Deploying" is
 just committing and pushing to `main`** — there is no `deploy:*` npm script anymore
