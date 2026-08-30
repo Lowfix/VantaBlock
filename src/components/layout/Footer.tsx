@@ -1,32 +1,21 @@
+import { Link } from "react-router-dom";
 import { Send, MessageCircle, Code2 } from "lucide-react";
 import { Logo } from "./Logo";
 
+// Trimmed on 2026-08-29 to just Product + Legal: the Company column (About/
+// Careers/Blog/Contact), the Resources column (Knowledge Base/Modpack Guides/
+// API Docs/Affiliate Program) and Product's "Status Page" were all dropped
+// until there's something real behind them — don't re-add placeholders for
+// them. The Legal links are still "/#" placeholders, deliberately left in
+// place pending a separate conversation about what legal pages are needed.
 const columns = [
   {
     title: "Product",
     links: [
       { label: "Features", href: "/#features" },
+      { label: "Server Locations", href: "/locations" },
       { label: "Pricing", href: "/#pricing" },
-      { label: "Server Locations", href: "/#" },
-      { label: "Status Page", href: "/#" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About", href: "/#" },
-      { label: "Careers", href: "/#" },
-      { label: "Blog", href: "/#" },
-      { label: "Contact", href: "/#" },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { label: "Knowledge Base", href: "/#" },
-      { label: "Modpack Guides", href: "/#" },
-      { label: "API Docs", href: "/#" },
-      { label: "Affiliate Program", href: "/#" },
+      { label: "FAQ", href: "/#faq" },
     ],
   },
   {
@@ -40,6 +29,8 @@ const columns = [
   },
 ];
 
+const PLACEHOLDER = "/#";
+
 export function Footer() {
   return (
     // `relative` isn't for layout here — it's what makes this opaque
@@ -50,7 +41,7 @@ export function Footer() {
     // Footer's own `bg-ink` and coming later in the page.
     <footer className="relative border-t border-line-soft bg-ink">
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid grid-cols-2 gap-10 md:grid-cols-6">
+        <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
           <div className="col-span-2">
             <Logo />
             <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-text-lo">
@@ -76,9 +67,18 @@ export function Footer() {
               <ul className="mt-4 space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <a href={link.href} className="text-[13px] text-text-lo transition-colors hover:text-text-md">
-                      {link.label}
-                    </a>
+                    {link.href === PLACEHOLDER ? (
+                      <a href={link.href} className="text-[13px] text-text-lo transition-colors hover:text-text-md">
+                        {link.label}
+                      </a>
+                    ) : (
+                      // Real destinations go through the router so they work
+                      // from any page without a full reload (and land on the
+                      // right #section via App.tsx's ScrollManager).
+                      <Link to={link.href} className="text-[13px] text-text-lo transition-colors hover:text-text-md">
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -87,7 +87,7 @@ export function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-line-soft pt-8 sm:flex-row">
-          <p className="text-xs text-text-lo">© 2026 Vantablock Hosting LLC. All rights reserved.</p>
+          <p className="text-xs text-text-lo">© 2026 Vantablock. All rights reserved.</p>
           <p className="text-xs text-text-lo">Not affiliated with Mojang Studios or Microsoft.</p>
         </div>
       </div>

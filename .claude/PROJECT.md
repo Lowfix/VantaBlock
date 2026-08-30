@@ -14,11 +14,15 @@ useful only as reference if the authenticated app is ever rebuilt), [FRONTEND.md
 
 ## What the site is today
 
-A single page (`src/pages/LandingPage.tsx`) — hero, features, an invite-only/plan-tiers notice,
-a closing CTA, footer. No routing library (`react-router-dom` was removed — there's nothing to
-route to), no login/register/dashboard, no live data fetching of any kind. Every button on the
-page either scrolls to the `#pricing` section or goes nowhere functional yet (footer's
-placeholder links) — there is no signup or contact flow behind any of them right now.
+Three static routes, all client-side (`react-router-dom`, plain `<BrowserRouter>` — see
+FRONTEND.md): `/` (`src/pages/LandingPage.tsx` — hero, features, a server-location teaser,
+the invite-only/plan-tiers section, FAQ, closing CTA, footer), `/locations`
+(`LocationsPage.tsx` — a US dot-map with California highlighted as the single "US West" region,
+region facts, and an *estimated* latency-by-city table), and `/get-started` (`GetStartedPage.tsx`
+— a mock signup/login form that submits nothing and says so). No login/register/dashboard, no
+live data fetching of any kind. Every CTA either scrolls to a landing-page section or lands on
+the mock get-started page; the footer's Legal links are still `/#` placeholders. There is no
+signup or contact flow behind any of it right now.
 
 **Deploys via Cloudflare Pages reading directly from `github.com/Lowfix/VantaBlock`** — push to
 `main`, Pages auto-builds (`npm run build`, output `dist/`) and republishes. There is no custom

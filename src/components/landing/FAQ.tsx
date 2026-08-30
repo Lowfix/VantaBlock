@@ -24,6 +24,11 @@ const faqs: FAQItem[] = [
       "Every plan runs on dedicated AMD Ryzen 9 9955HX cores (16 Zen 5 cores, up to 5.4GHz) with 96GB of DDR5 memory and NVMe SSD storage per node — no shared vCPU throttling, no oversold RAM. It's hardware chosen for one job: keeping your TPS at 20, even under modpacks and packed raids.",
   },
   {
+    question: "Where are your servers located?",
+    answer:
+      "California — our US West region. Every server runs from there right now, which means single-digit ping for the West Coast and comfortably playable latency from anywhere in North America. The Server Locations page has typical round-trip times by city.",
+  },
+  {
     question: "How long does setup take?",
     answer:
       "Under a minute. Pick a version, choose Paper, Forge, Fabric, or Vanilla, and you're on the world selection screen — 60 second deploy time from request to a running server.",

@@ -31,6 +31,68 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-08-29 — Server Locations page (US dot-map, California), footer trimmed, shared page shell
+
+**What:** New `/locations` route (`src/pages/LocationsPage.tsx`): a dot-matrix map of the
+contiguous US with California lit up as the single "US West" region (`USMap.tsx` +
+generated `usMapData.ts` under `src/components/locations/`), three region-fact cards, an
+*estimated* latency-by-city table, and a "more regions as we grow" CTA. The landing page got a
+compact `LocationsTeaser` section (same map, three headline pings, link to `/locations`) between
+Features and Pricing, plus a "Where are your servers located?" FAQ entry. Navbar gained a
+"Locations" link. Footer trimmed per the user's request: Company column (About/Careers/Blog/
+Contact) and Resources column (Knowledge Base/Modpack Guides/API Docs/Affiliate Program)
+removed entirely, Product's "Status Page" removed, "© Vantablock Hosting LLC" → "© Vantablock"
+(no LLC exists yet). Product column now: Features / Server Locations / Pricing / FAQ. Legal
+column left as-is (still `/#` placeholders) pending a separate conversation.
+
+**Map data is generated, not hand-drawn:** `scripts/gen-us-map.mjs` projects the public-domain
+`us-atlas` states TopoJSON with d3-geo's `geoAlbers` into a 960×600 viewBox and writes coastline/
+state-border/California paths plus two `"x,y x,y …"` dot grids (inside-US, inside-CA) to
+`usMapData.ts`. The three packages it needs are installed `--no-save` only when regenerating —
+nothing is fetched at runtime and no runtime dependency was added. `USMap.tsx` turns each dot list
+into ONE `<path>` of tiny arcs (2 DOM nodes for ~2.6k dots, not 2.6k `<circle>`s). The region
+label is an HTML pill positioned by percentage over the SVG (not SVG `<text>`) so it keeps a real
+font size at mobile widths, and sits to the *right* of the marker because California hugs the
+viewBox's left edge — a centered-above pill clipped off the map.
+
+**Bug caught during generation:** the first fit included Guam, American Samoa, the Northern
+Marianas and the US Virgin Islands (`us-atlas` states-10m carries all the territories, not just
+PR), which shrank the whole contiguous US to ~280px of a 960px viewBox. Fixed by excluding ids
+60/66/69/78 alongside 02 (AK), 15 (HI), 72 (PR). If the map ever looks tiny after a regen, that's
+the first thing to check.
+
+**Shared page shell:** the fixed, parallax-scrolling decorative background (and the three
+already-solved CSS bugs behind its structure — see the comment block) moved out of
+`LandingPage.tsx` into `src/components/layout/AmbientPage.tsx`, so `LocationsPage` gets the
+identical treatment without duplicating it. Pure move, no behavior change to the landing page.
+
+**Cross-page navigation:** navbar/footer hrefs are now root-relative (`/#features`, not
+`#features`) and go through `<Link>`, so they work from `/locations` too. A plain `<BrowserRouter>`
+neither resets scroll on navigation nor scrolls to `#hash` targets (that's a full-page-load
+behavior), so `App.tsx` gained a tiny `ScrollManager`: on every location change, scroll to the
+hash target if there is one, else to the top. Side benefit: `GetStartedPage`'s existing "Back to
+plans" `<Link to="/#pricing">` now actually lands on the pricing section.
+
+**Verified in a real browser** (scratch Playwright, `chromium`, against `npm run dev`; build +
+lint clean first, lint warnings all pre-existing in untouched files): footer has exactly
+Product + Legal headings, no "LLC", none of the removed labels present; navbar Locations →
+`/locations` lands at scrollY 0 with the right `<title>`; footer Pricing from `/locations` →
+`/#pricing` with the section at viewport top; same-page Features anchor works; direct load of
+`/locations` renders; logo → `/`; zero console/page errors on both pages at 1440px and 390px; no
+horizontal overflow at 390px; mobile menu shows Locations and navigates; reduced-motion disables
+the marker pulse (`animation-name: none`). Screenshots reviewed — the map reads correctly at both
+widths. Playwright locator on mobile needed `:visible` because the hidden desktop nav's copy of
+each link is also in the DOM (same dual-render pattern the 2026-08-22 entry hit).
+
+**Not pushed** — committed locally only, per this project's practice of needing explicit
+confirmation before `git push`.
+
+**See also:** `src/pages/LocationsPage.tsx`, `src/components/locations/{USMap.tsx,usMapData.ts}`,
+`src/components/landing/LocationsTeaser.tsx`, `src/components/layout/{AmbientPage,Footer,PublicNavbar}.tsx`,
+`src/App.tsx`, `scripts/gen-us-map.mjs`, FRONTEND.md (rewritten for three routes).
+
+---
+
 ## 2026-08-22 — Client-side routing reintroduced: per-plan "Deploy" buttons → mock signup/login page
 
 **What:** Brought `react-router-dom` back as a dependency (fully removed in the code-side teardown
