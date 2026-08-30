@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import { Send, MessageCircle, Code2 } from "lucide-react";
 import { Logo } from "./Logo";
+import { LEGAL_DOCS } from "../../legal";
 
 // Trimmed on 2026-08-29 to just Product + Legal: the Company column (About/
 // Careers/Blog/Contact), the Resources column (Knowledge Base/Modpack Guides/
 // API Docs/Affiliate Program) and Product's "Status Page" were all dropped
 // until there's something real behind them — don't re-add placeholders for
-// them. The Legal links are still "/#" placeholders, deliberately left in
-// place pending a separate conversation about what legal pages are needed.
+// them. The Legal column is generated from src/legal's LEGAL_DOCS, so adding
+// or renaming a policy there updates the footer automatically.
 const columns = [
   {
     title: "Product",
@@ -20,16 +21,9 @@ const columns = [
   },
   {
     title: "Legal",
-    links: [
-      { label: "Terms of Service", href: "/#" },
-      { label: "Privacy Policy", href: "/#" },
-      { label: "Refund Policy", href: "/#" },
-      { label: "Acceptable Use", href: "/#" },
-    ],
+    links: LEGAL_DOCS.map((d) => ({ label: d.title, href: `/legal/${d.slug}` })),
   },
 ];
-
-const PLACEHOLDER = "/#";
 
 export function Footer() {
   return (
@@ -67,18 +61,12 @@ export function Footer() {
               <ul className="mt-4 space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    {link.href === PLACEHOLDER ? (
-                      <a href={link.href} className="text-[13px] text-text-lo transition-colors hover:text-text-md">
-                        {link.label}
-                      </a>
-                    ) : (
-                      // Real destinations go through the router so they work
-                      // from any page without a full reload (and land on the
-                      // right #section via App.tsx's ScrollManager).
-                      <Link to={link.href} className="text-[13px] text-text-lo transition-colors hover:text-text-md">
-                        {link.label}
-                      </Link>
-                    )}
+                    {/* Router links so they work from any page without a full
+                        reload (and land on the right #section via App.tsx's
+                        ScrollManager). */}
+                    <Link to={link.href} className="text-[13px] text-text-lo transition-colors hover:text-text-md">
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>

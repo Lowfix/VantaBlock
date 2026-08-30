@@ -20,9 +20,12 @@ the invite-only/plan-tiers section, FAQ, closing CTA, footer), `/locations`
 (`LocationsPage.tsx` — a US dot-map with California highlighted as the single "US West" region,
 region facts, and an *estimated* latency-by-city table), and `/get-started` (`GetStartedPage.tsx`
 — a mock signup/login form that submits nothing and says so). No login/register/dashboard, no
-live data fetching of any kind. Every CTA either scrolls to a landing-page section or lands on
-the mock get-started page; the footer's Legal links are still `/#` placeholders. There is no
-signup or contact flow behind any of it right now.
+live data fetching of any kind. `/legal/{terms,privacy,refunds,acceptable-use}` (`LegalPage.tsx`
++ `src/legal/`) hold the four legal documents — drafted 2026-08-29 for a California sole
+proprietor, **not attorney-reviewed, with placeholder county/emails in `src/legal/entity.ts`**
+that must be filled before they go live. Every CTA either scrolls to a landing-page section or
+lands on the mock get-started page. There is no signup or contact flow behind any of it right
+now.
 
 **Deploys via Cloudflare Pages reading directly from `github.com/Lowfix/VantaBlock`** — push to
 `main`, Pages auto-builds (`npm run build`, output `dist/`) and republishes. There is no custom

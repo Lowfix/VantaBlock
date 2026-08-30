@@ -135,6 +135,15 @@ export function GetStartedPage() {
                   <button type="submit" className={buttonVariants({ size: "lg", className: "mt-2 w-full" })}>
                     {mode === "signup" ? "Create account" : "Log in"}
                   </button>
+
+                  {mode === "signup" && (
+                    <p className="text-center text-[12px] leading-relaxed text-text-lo">
+                      By creating an account you confirm you're 18 or older and agree to the{" "}
+                      <Link to="/legal/terms" className="text-accent-400 hover:text-accent-300">Terms of Service</Link>,{" "}
+                      <Link to="/legal/acceptable-use" className="text-accent-400 hover:text-accent-300">Acceptable Use Policy</Link>{" "}
+                      and <Link to="/legal/privacy" className="text-accent-400 hover:text-accent-300">Privacy Policy</Link>.
+                    </p>
+                  )}
                 </form>
 
                 <p className="mt-6 text-center text-[13.5px] text-text-lo">

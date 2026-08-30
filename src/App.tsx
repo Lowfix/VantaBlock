@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { LandingPage } from "./pages/LandingPage";
 import { GetStartedPage } from "./pages/GetStartedPage";
 import { LocationsPage } from "./pages/LocationsPage";
+import { LegalPage } from "./pages/LegalPage";
 
 // A plain <BrowserRouter> leaves the scroll position alone on client-side
 // navigation and doesn't jump to `#hash` targets either (that's a
@@ -34,6 +35,9 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/locations" element={<LocationsPage />} />
         <Route path="/get-started" element={<GetStartedPage />} />
+        {/* /legal alone and unknown slugs both redirect to the Terms inside LegalPage. */}
+        <Route path="/legal" element={<LegalPage />} />
+        <Route path="/legal/:slug" element={<LegalPage />} />
       </Routes>
     </BrowserRouter>
   );

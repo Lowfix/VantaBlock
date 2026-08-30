@@ -5,7 +5,7 @@ the old authenticated dashboard/console/billing UI this file used to document, t
 PROJECT.md's History section and git history before the 2026-08-22 teardown commit.**
 
 React 19 + TypeScript + Vite 8 + Tailwind 4 (via `@tailwindcss/vite`). No state management library,
-no Context. Three routes as of 2026-08-29 (see below) — `react-router-dom` was fully removed in the
+no Context. Five routes across four pages as of 2026-08-29 (see below) — `react-router-dom` was fully removed in the
 teardown and then reintroduced, minimally, when a second page became genuinely needed (see
 DEVLOG.md's "Client-side routing reintroduced" entry). Don't add more router surface (data routers,
 loaders, nested layouts) than the flat `<Route>` list currently uses unless a real need shows up.
@@ -17,6 +17,9 @@ src/
   pages/LandingPage.tsx         The marketing page (still the site's main content)
   pages/LocationsPage.tsx       /locations — US dot-map with California as the one region, latency table
   pages/GetStartedPage.tsx      Mock signup/login page — NOT wired to any backend, see below
+  pages/LegalPage.tsx           /legal/:slug — renders whichever of the four legal documents matches
+  legal/                        The legal documents themselves (terms/privacy/refunds/acceptable-use.tsx),
+                                entity.ts (who "we" are — ONE place to change), types.ts, index.ts
   components/landing/           Hero, Features, LocationsTeaser, FriendsPhaseNotice, FAQ, CTASection, AmbientBackground
   components/locations/         USMap (the map component) + usMapData.ts (GENERATED — see below)
   components/layout/            AmbientPage (shared page shell), PublicNavbar, Footer, Logo
@@ -29,9 +32,10 @@ scripts/gen-us-map.mjs          One-off generator for usMapData.ts (not part of 
 
 ## `App.tsx` / `main.tsx`
 
-`App.tsx` wraps `<BrowserRouter><Routes>` around three routes: `/` (`LandingPage`), `/locations`
-(`LocationsPage`) and `/get-started` (`GetStartedPage`), plus one tiny non-route component,
-`ScrollManager`. Deliberately minimal — a plain `<Route>` list, no data routers/loaders, no
+`App.tsx` wraps `<BrowserRouter><Routes>` around the routes `/` (`LandingPage`), `/locations`
+(`LocationsPage`), `/get-started` (`GetStartedPage`), and `/legal` + `/legal/:slug` (`LegalPage` —
+bare `/legal` and unknown slugs redirect to `/legal/terms` inside the component), plus one tiny
+non-route component, `ScrollManager`. Deliberately minimal — a plain `<Route>` list, no data routers/loaders, no
 providers. `main.tsx` is untouched boilerplate (`createRoot` + `<StrictMode>`).
 
 **`ScrollManager`** exists because a plain `<BrowserRouter>` neither resets scroll position on
@@ -40,8 +44,7 @@ skips it). On every location change it scrolls to the hash's element if there is
 top. This is what makes `/#pricing`-style links work from *other* pages (navbar/footer from
 `/locations`, `GetStartedPage`'s "Back to plans") and keeps same-page anchors working too. Every
 nav/footer href is therefore root-relative (`/#features`, never bare `#features`) and rendered via
-`<Link>`; the only plain `<a href="/#">`s left are the footer's Legal placeholders and social
-icons.
+`<Link>`; the only plain `<a href="/#">`s left are the footer's social icons.
 
 **Cloudflare Pages needs `public/_redirects` (`/*  /index.html  200`) for any of this to work** —
 without it, a direct load or refresh of `/locations` or `/get-started` 404s, since Pages serves
@@ -96,6 +99,30 @@ grids at 11px spacing. The generator's three packages (`us-atlas`, `topojson-cli
 are **not** project dependencies — install them `--no-save` only when regenerating (instructions
 at the top of the script). Nothing map-related is fetched at runtime.
 
+## `LegalPage.tsx` + `src/legal/` — the four legal documents
+
+`/legal/terms`, `/legal/privacy`, `/legal/refunds`, `/legal/acceptable-use`. One page component
+renders whichever `LegalDocument` matches the slug: title, "Last updated", a plain-language "short
+version" box (`summary` bullets — with a line saying the full text controls), a sticky numbered
+table of contents (`scroll-mt-24` sections so anchors clear the sticky navbar), the sections, and
+prev/next links. The documents are **data, not pages**: each is a `LegalDocument` object in
+`src/legal/*.tsx` whose section bodies are plain JSX (`<p>`, `<ul>`, `<strong>`, `<Link>`, `<a
+href="#id">`) with **no classes** — `LegalPage`'s `PROSE` selector string styles them. Keep section
+`id`s stable; they're deep-link anchors used across documents (e.g. the AUP links to
+`/legal/terms#copyright`). The footer's Legal column is generated from `LEGAL_DOCS`.
+
+**`entity.ts` is the single source for "who we are"** — trade name, sole-proprietor description,
+governing state, county for venue, contact mailboxes, data location, payment processor. Every
+document interpolates from it, so forming an LLC, getting a domain, or moving is one edit. **Its
+`county` and the four `*Email` values are TODO placeholders** (`[County]`, `*@vantablock.example`)
+that must be filled in before these pages are pushed live. The documents are drafts written for a
+sole proprietor under California law and have **not** been reviewed by an attorney — the decisions
+behind them (no refunds except our fault; 18+ account holders; informal resolution then courts, no
+arbitration; 3-day/14-day payment grace and deletion windows; 30/14/90-day/7-year retention) are
+recorded in the 2026-08-29 DEVLOG entry. Numbers that appear in more than one document (14-day
+post-termination data retention, 24-hour outage threshold, 14 days' notice of material changes)
+must stay in sync when edited.
+
 ## `GetStartedPage.tsx` — mock signup/login, not wired to anything real
 
 Reached from every plan card's "Deploy {plan}" button (`FriendsPhaseNotice.tsx`) via
@@ -103,9 +130,11 @@ Reached from every plan card's "Deploy {plan}" button (`FriendsPhaseNotice.tsx`)
 `LoginPage.tsx`/`RegisterPage.tsx`/`AuthLayout.tsx` (recoverable via `git show 584357a^:...`) with
 every real bit stripped — no `fetch`, no auth context, no OAuth. One component, a local `mode`
 toggle covers both "sign up" and "log in" framing. Submitting either form never fakes success or a
-logged-in state — it swaps to an explicit "this is a preview, nothing was submitted" banner. If
-real accounts ever come back, this is the page to rewire, not a reason to assume auth already
-exists elsewhere. (It does not use `AmbientPage` — it has its own centered-card layout.)
+logged-in state — it swaps to an explicit "this is a preview, nothing was submitted" banner. The
+signup form carries the standard consent line ("By creating an account you confirm you're 18 or
+older and agree to the Terms / AUP / Privacy Policy") linking to `/legal/*`. If real accounts ever
+come back, this is the page to rewire, not a reason to assume auth already exists elsewhere. (It
+does not use `AmbientPage` — it has its own centered-card layout.)
 
 ## Every button/link on the site
 
@@ -121,11 +150,11 @@ There is currently no backend, so nothing here submits data or requires a sessio
   (`PlanCardBody`, shared by the desktop fan and the mobile stacked list) to
   `/get-started?plan={plan.id}` — the mock signup/login page described above.
 - `Footer`: two columns only since 2026-08-29. **Product** — Features, Server Locations, Pricing,
-  FAQ (all real destinations). **Legal** — Terms / Privacy / Refund / Acceptable Use, still `/#`
-  placeholders pending a separate conversation about legal pages. The Company column, the
-  Resources column (Knowledge Base / Modpack Guides / API Docs / Affiliate Program) and Product's
-  "Status Page" were removed on purpose until there's something real behind them — don't re-add
-  placeholders. Copyright line is "© 2026 Vantablock" (no LLC exists). Social icons are `/#`.
+  FAQ. **Legal** — generated from `LEGAL_DOCS`, linking to `/legal/{slug}`. The Company column,
+  the Resources column (Knowledge Base / Modpack Guides / API Docs / Affiliate Program) and
+  Product's "Status Page" were removed on purpose until there's something real behind them — don't
+  re-add placeholders. Copyright line is "© 2026 Vantablock" (no LLC exists). Social icons are the
+  only `/#` placeholders left.
 
 If a real contact/invite mechanism ever comes back, that's the place to wire one of these buttons
 to something real rather than inventing a destination now.

@@ -31,6 +31,77 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-08-29 — Legal pages: Terms, Privacy, Refunds, Acceptable Use (drafts) + `/legal/:slug`
+
+**What:** Four legal documents as data in `src/legal/` (`terms.tsx`, `privacy.tsx`, `refunds.tsx`,
+`acceptable-use.tsx`; each a `LegalDocument` with `summary` bullets and `sections` of plain JSX),
+rendered by one `src/pages/LegalPage.tsx` at `/legal/:slug` (bare `/legal` and unknown slugs
+`<Navigate>` to `/legal/terms`). Sticky numbered TOC, "The short version" box, prev/next links,
+per-document `<title>`. Footer's Legal column now generated from `LEGAL_DOCS` (real links, no
+`/#` placeholders left except the social icons). `GetStartedPage`'s signup form got the standard
+consent line linking to Terms/AUP/Privacy. `src/legal/entity.ts` is the single source for trade
+name, sole-proprietor description, state/county, contact mailboxes, data location, and payment
+processor — every document interpolates from it.
+
+**Decisions the user made (via AskUserQuestion) — don't silently change these:**
+- Legal party: an individual sole proprietor doing business as "Vantablock", **California** law.
+- Refunds: **none except when it's our fault** — chosen over 72-hour / 7-day money-back and
+  prorated options. Made concrete as four triggers: billing error; server unavailable >24
+  consecutive hours because of *our* hardware/network (not scheduled maintenance, DDoS/mitigation,
+  upstream, or the customer's software); can't provision within 48 hours of payment / can't deliver
+  an advertised feature; plan or service discontinued (prorated). Request within 14 days, reply in
+  5 business days, refund to original method in 5–10 business days.
+- Age: **18+ to hold an account**, players any age (chosen over 13+ with parental consent).
+- Disputes: **30-day informal resolution, then small claims or state/federal courts in
+  `[County]`, California** — no arbitration clause (the user chose this over binding arbitration +
+  class-action waiver; note in the question that consumer-arbitration fee rules make arbitration
+  expensive for a $5/mo product).
+
+**Defaults I chose (flagged to the user, easy to change in the documents):** failed payment →
+suspend after 3 days, delete data 14 days after suspension; 14-day post-termination data retention
+across all docs; logs 90 days, account info 30 days after closure, billing records 7 years,
+support 2 years; 14 days' notice of material changes to any policy; 30 days' notice of price
+increases; liability cap = 3 months' fees (US$50 if nothing paid); an early-access section in the
+Terms + Refunds saying free servers are "as available" and no free→paid conversion without
+affirmative consent (California ARL's free-to-pay-conversion rule).
+
+**Why the specific contents:** Privacy Policy is written to CalOPPA's checklist (categories of PII
+collected, categories of third parties shared with, how to review/change, how changes are
+announced, effective date, how Do Not Track is handled — we don't track, so we state we don't
+respond differently). Billing section carries California Automatic Renewal Law disclosures
+(renewal terms shown before purchase + confirmed by email, cancel in the same medium — panel or
+email, price-change notice). AUP includes the Minecraft-specific rules from Mojang's Usage
+Guidelines (online mode on, EULA-compliant monetization, no "Minecraft" as leading server-name
+word, not-affiliated disclaimer) and the US provider obligation to report CSAM to NCMEC. Terms has
+a DMCA notice/counter-notice section.
+
+**Placeholders / things the user must do before these go live (told them):** fill
+`entity.ts` `county` and the four `*Email`s (no domain exists yet); have an attorney review; file a
+California Fictitious Business Name statement (sole proprietor using a name without their surname
+must, in their county, within 40 days of first use); register a DMCA agent with the US Copyright
+Office (~$6, required for §512 safe harbor, renew every 3 years) and put the same contact in the
+Terms' copyright section; when billing launches, make the checkout UI actually show the ARL
+disclosures the Terms promise.
+
+**Verified (build + lint clean; scratch Playwright against `npm run dev`, 1440px + 390px):** all
+four docs render with matching section/TOC counts and correct `<title>`s; `/legal` and
+`/legal/nonsense` redirect to `/legal/terms`; TOC anchor click lands the section at 96px (below
+the sticky navbar, via `scroll-mt-24`); in-content cross-links and cross-document deep links
+(`/legal/terms#copyright` from the AUP) land at the right section; prev/next works; footer Legal
+links go to the right slugs and the new page starts at scrollY 0 (an "immediately after click"
+read of 4485 was a timing artifact — 0 after 400ms, the `ScrollManager` effect just hadn't run
+yet); consent line visible on `/get-started` with the three links; zero console/page errors; no
+horizontal overflow on mobile. Screenshots reviewed. Playwright counted 11/6/4/5 placeholder
+strings (`[County]` / `vantablock.example`) per document — expected until `entity.ts` is filled.
+
+**Not pushed** — committed locally only.
+
+**See also:** `src/legal/*`, `src/pages/LegalPage.tsx`, `src/components/layout/Footer.tsx`,
+`src/pages/GetStartedPage.tsx`, `src/App.tsx`, FRONTEND.md ("LegalPage.tsx + src/legal/"),
+CLAUDE.md must-know bullet.
+
+---
+
 ## 2026-08-29 — Server Locations page (US dot-map, California), footer trimmed, shared page shell
 
 **What:** New `/locations` route (`src/pages/LocationsPage.tsx`): a dot-matrix map of the
