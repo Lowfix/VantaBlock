@@ -16,6 +16,7 @@ const columns = [
     title: "Product",
     links: [
       { label: "Features", href: "/#features" },
+      { label: "All Plans", href: "/plans" },
       { label: "Server Locations", href: "/locations" },
       { label: "Panel Preview", href: "/panel-preview" },
       { label: "Pricing", href: "/#pricing" },

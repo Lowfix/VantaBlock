@@ -352,6 +352,16 @@ export function FriendsPhaseNotice() {
         <div className="mt-10">
           <MobilePlanList plans={DISPLAYED_PLANS} />
         </div>
+
+        {/* The landing shows only the first three tiers on purpose — the
+            full lineup, comparison table, and per-tier guidance live on
+            /plans. New tiers added to mock-data/plans.ts appear THERE, not
+            here. */}
+        <div className="mt-10 text-center">
+          <Link to="/plans" className={buttonVariants({ variant: "outline", size: "md" })}>
+            See every plan in detail
+          </Link>
+        </div>
       </div>
     </section>
   );

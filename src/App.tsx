@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { LandingPage } from "./pages/LandingPage";
 import { GetStartedPage } from "./pages/GetStartedPage";
 import { LocationsPage } from "./pages/LocationsPage";
+import { PlansPage } from "./pages/PlansPage";
 // The whole panel demo (recovered panel UI + its in-memory backend) is
 // lazy-loaded so visitors who never open it don't download it — it's a
 // separate chunk (~200KB) behind these five dynamic imports.
@@ -50,6 +51,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/locations" element={<LocationsPage />} />
+        <Route path="/plans" element={<PlansPage />} />
         <Route path="/get-started" element={<GetStartedPage />} />
         {/* The panel demo — the recovered real panel UI running on the
             in-memory demo backend (src/demo). One layout route provides the

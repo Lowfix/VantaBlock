@@ -5,7 +5,7 @@ the old authenticated dashboard/console/billing UI this file used to document, t
 PROJECT.md's History section and git history before the 2026-08-22 teardown commit.**
 
 React 19 + TypeScript + Vite 8 + Tailwind 4 (via `@tailwindcss/vite`). No state management library,
-no Context. Ten routes across nine pages as of 2026-09-01 (see below) — `react-router-dom` was fully removed in the
+no Context. Eleven routes across ten pages as of 2026-09-01 (see below) — `react-router-dom` was fully removed in the
 teardown and then reintroduced, minimally, when a second page became genuinely needed (see
 DEVLOG.md's "Client-side routing reintroduced" entry). Don't add more router surface (data routers,
 loaders, nested layouts) than the flat `<Route>` list currently uses unless a real need shows up.
@@ -16,6 +16,7 @@ loaders, nested layouts) than the flat `<Route>` list currently uses unless a re
 src/
   pages/LandingPage.tsx         The marketing page (still the site's main content)
   pages/LocationsPage.tsx       /locations — US dot-map with California as the one region, latency table
+  pages/PlansPage.tsx           /plans — the FULL plan lineup in detail; new tiers appear here, not on the landing page
   pages/GetStartedPage.tsx      Mock signup/login page — NOT wired to any backend, see below
   pages/LegalPage.tsx           /legal/:slug — renders whichever of the four legal documents matches
   legal/                        The legal documents themselves (terms/privacy/refunds/acceptable-use.tsx),
@@ -117,6 +118,19 @@ coastline path, interior state borders, California's path/centroid, and two `"x,
 grids at 11px spacing. The generator's three packages (`us-atlas`, `topojson-client`, `d3-geo`)
 are **not** project dependencies — install them `--no-save` only when regenerating (instructions
 at the top of the script). Nothing map-related is fetched at runtime.
+
+## `PlansPage.tsx` — the full plan lineup
+
+`/plans`: every tier in `mock-data/plans.ts` as a detailed card (blurb, planned price + "$0 in
+beta" chip, spec rows, feature checklist, "Choose {plan}" → `/get-started?plan=`), a side-by-side
+comparison table (in an `overflow-x-auto` wrapper for mobile), an "every plan includes" grid, and
+pick-by-playstyle guidance. **The contract (2026-09-01, user's request):** the landing page's
+pricing section deliberately shows only the first three tiers (`DISPLAYED_PLANS = plans.slice(0, 3)`
+in FriendsPhaseNotice) to stay clean — a NEW TIER goes into `mock-data/plans.ts` and appears on
+`/plans` automatically, and the landing page is left alone. `PLAN_BLURBS`/`TIER_ICONS` in
+PlansPage are optional per-tier extras — a tier missing from them still renders. Linked from the
+landing pricing section ("See every plan in detail"), the footer ("All Plans"), and sets its own
+`document.title`.
 
 ## `LegalPage.tsx` + `src/legal/` — the four legal documents
 

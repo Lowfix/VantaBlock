@@ -31,6 +31,36 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-09-01 — /plans: full plan-detail page; landing stays a clean 3-tier fan
+
+**What:** New `PlansPage` at `/plans` in the Locations-page mold: all six tiers as detailed cards
+(planned price + "$0 in beta" chip, spec rows, feature checklists, Choose → signup with the plan
+preselected, Grove badged "Recommended" via `plan.featured`), a side-by-side comparison table
+(price/RAM/vCores/storage/players/DDoS tier/backups/priority support — booleans derived from the
+plans' feature strings, table wrapped in `overflow-x-auto` for phones), an "every plan includes"
+grid, and pick-by-playstyle guidance. Linked from the landing pricing section ("See every plan in
+detail"), footer ("All Plans"), and `/get-started` flows unchanged.
+
+**The point (user's request):** the landing page keeps its clean three-card fan permanently;
+future tiers get added to `mock-data/plans.ts` and show up on `/plans` automatically without
+touching the landing page. `PLAN_BLURBS`/`TIER_ICONS` maps in PlansPage are optional per-tier —
+a new tier missing from them still renders fine.
+
+**Data quirk noted:** Woodland/Redwood's feature arrays lack "Free subdomain" (all plans really
+have it — the deploy flow generates one for every tier), so the subdomain is listed under "every
+plan includes" rather than as a comparison row. If plans.ts is ever cleaned up, that row could
+move into the table.
+
+**Verified** (Playwright, 1440px + 390px): six cards + six Choose buttons + six beta chips,
+comparison table renders, Choose Woodland lands on signup saying "Woodland plan", landing link and
+footer link navigate, no horizontal overflow (the table scrolls internally), zero console errors;
+desktop screenshot reviewed.
+
+**See also:** `src/pages/PlansPage.tsx`, `FriendsPhaseNotice.tsx` (link + contract comment),
+`Footer.tsx`, FRONTEND.md ("PlansPage" section).
+
+---
+
 ## 2026-09-01 — Panel demo: obvious way home (top strip replaces the bottom pill)
 
 **What:** User feedback — from inside the panel demo, the only ways back to the site were the tiny
