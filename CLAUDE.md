@@ -47,9 +47,10 @@ Detailed docs live in `.claude/` — **read the relevant one(s) before making no
   "does this match real hardware" question; don't change it again without being asked.
 - **The legal documents (`src/legal/`) are unreviewed drafts, hidden in production.**
   `LEGAL_PAGES_ENABLED` in `src/config.ts` is `import.meta.env.DEV` — visible on `npm run dev`,
-  off on the deployed site — until `src/legal/entity.ts`'s TODO placeholders (`[County]`,
-  `*@vantablock.example`) are real and the set has had an attorney's read; flip it to `true` to
-  launch. Don't quietly change the substantive choices recorded in the
+  off on the deployed site. `entity.ts`'s values are real as of 2026-09-01 (Tulare County,
+  `*@vantablock.net` mailboxes); the remaining gates are the user's real-world errands (attorney
+  review, county FBN filing, DMCA agent registration) — flip the flag to `true` to launch when
+  they say so. Don't quietly change the substantive choices recorded in the
   DEVLOG entry (refund triggers, age, venue, grace/retention periods) — those were the user's.
 - **Never add `public/_redirects`.** Production is a Cloudflare Worker (static assets) whose SPA
   fallback is configured dashboard-side; a `/* /index.html 200` rule breaks the deploy and the
