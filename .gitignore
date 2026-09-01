@@ -42,3 +42,6 @@ pterodactyl/wings/etc/config.yml
 *.njsproj
 *.sln
 *.sw?
+
+# Local PDF exports of the legal pages (for attorney review) — never committed
+PDFs/
