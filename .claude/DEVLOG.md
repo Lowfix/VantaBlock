@@ -31,6 +31,25 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-09-01 — Panel demo: obvious way home (top strip replaces the bottom pill)
+
+**What:** User feedback — from inside the panel demo, the only ways back to the site were the tiny
+"Exit" pill and "Log out", which reads as scary rather than "return home". Replaced the bottom
+pill with a fixed h-8 strip across the very top of every panel page: "← Back to vantablock.net ·
+Panel demo — sample data, nothing is real or saved" (demo-honesty text folded in; mobile shows
+just the home link).
+
+**Layout mechanics worth remembering:** the strip is `fixed inset-x-0 top-0 z-50` with an `h-8`
+in-flow spacer, and the panel layouts had to move with it — DashboardShell's fixed sidebar
+`lg:inset-y-0` → `lg:top-8 lg:bottom-0` and both layouts' `sticky top-0` headers → `sticky top-8`,
+otherwise the sidebar logo hid behind the strip and scrolled headers slid under it. Verified with
+Playwright that after scrolling, headerTop === stripBottom === 32px, the link navigates home, and
+390px stays overflow-free.
+
+**See also:** `src/demo/PanelDemoScope.tsx`, `DashboardShell.tsx`, `ServerPanelPage.tsx`.
+
+---
+
 ## 2026-09-01 — Private-beta copy pass: make the invite-only mode unmistakable
 
 **What:** Site-wide framing changes (user request, from a ChatGPT-suggested list) so no visitor

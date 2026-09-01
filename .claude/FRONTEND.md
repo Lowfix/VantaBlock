@@ -171,7 +171,10 @@ Five routes, all lazy-loaded (separate ~200KB chunk; the marketing bundle doesn'
 with 14 tabs), `/panel-preview/billing`, `/panel-preview/support`, `/panel-preview/account`.
 All sit under one layout route, `demo/PanelDemoScope.tsx` — user + toast providers, a
 RequireAuth-style gate (pages must not render before the demo user "loads", or forms seed their
-local state from null), and the persistent "Panel demo — sample data" pill.
+local state from null), and a fixed h-8 strip across the very top: "← Back to vantablock.net ·
+Panel demo — sample data" (added 2026-09-01 because "Log out" wasn't an obvious way home; it
+replaced an earlier bottom pill). The panel layouts' sticky headers and DashboardShell's fixed
+sidebar are offset `top-8` to clear that strip — keep them in sync with its height.
 
 **This is not new UI.** The pages, tabs, modals, and primitives are the real pre-teardown panel
 (recovered from `git show 584357a^:...`), with exactly three kinds of change: (1) every

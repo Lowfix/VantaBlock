@@ -1,6 +1,6 @@
 import { Link, Outlet } from "react-router-dom";
 import type { ReactNode } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { UserProvider, useUser } from "../context/UserContext";
 import { ToastProvider } from "../components/ui/Toast";
 
@@ -11,7 +11,7 @@ function DemoReady({ children }: { children: ReactNode }) {
   const { user, loading } = useUser();
   if (loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-void">
+      <div className="flex min-h-[calc(100vh-2rem)] items-center justify-center bg-void">
         <Loader2 size={22} className="animate-spin text-accent-400" />
       </div>
     );
@@ -27,23 +27,29 @@ export function PanelDemoScope() {
   return (
     <UserProvider>
       <ToastProvider>
+        {/* Slim, always-visible strip at the very top: the obvious way home
+            (users read "Log out" as scary, not as "back to the site"), plus
+            the demo-honesty note that used to live in a bottom pill. The
+            panel layouts' sticky headers and fixed sidebar are offset by
+            top-8 to sit below it — keep them in sync with its h-8. */}
+        <div className="fixed inset-x-0 top-0 z-50 flex h-8 items-center justify-center gap-2 overflow-hidden border-b border-accent-500/25 bg-ink px-3 text-[12px]">
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-1.5 font-semibold text-accent-300 transition-colors hover:text-accent-200"
+          >
+            <ArrowLeft size={12} />
+            Back to vantablock.net
+          </Link>
+          <span className="hidden text-text-lo sm:inline">·</span>
+          <span className="hidden min-w-0 items-center gap-1.5 truncate text-text-lo sm:flex">
+            <Sparkles size={11} className="shrink-0 text-accent-400" />
+            Panel demo — sample data, nothing is real or saved
+          </span>
+        </div>
+        <div className="h-8" aria-hidden />
         <DemoReady>
           <Outlet />
         </DemoReady>
-        <div className="pointer-events-none fixed bottom-5 left-1/2 z-[90] w-full max-w-[calc(100vw-1.5rem)] -translate-x-1/2 sm:w-auto">
-          <div className="pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2.5 rounded-full border border-accent-500/40 bg-ink/95 py-1.5 pl-3.5 pr-2 text-[12.5px] text-text-md shadow-glow-sm backdrop-blur">
-            <Sparkles size={13} className="shrink-0 text-accent-300" />
-            <span className="min-w-0 truncate whitespace-nowrap">
-              <span className="font-semibold text-accent-300">Panel demo</span> — sample data, nothing is real or saved
-            </span>
-            <Link
-              to="/"
-              className="rounded-full border border-line bg-panel-2 px-2.5 py-0.5 font-medium text-text-md transition-colors hover:border-accent-500/40 hover:text-text-hi"
-            >
-              Exit
-            </Link>
-          </div>
-        </div>
       </ToastProvider>
     </UserProvider>
   );

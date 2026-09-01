@@ -105,7 +105,7 @@ export function DashboardShell({ children, title }: { children: ReactNode; title
 
   return (
     <div className="min-h-screen bg-void">
-      <div className="hidden w-64 shrink-0 border-r border-line-soft bg-ink lg:fixed lg:inset-y-0 lg:flex lg:flex-col">
+      <div className="hidden w-64 shrink-0 border-r border-line-soft bg-ink lg:fixed lg:bottom-0 lg:top-8 lg:flex lg:flex-col">
         {SidebarContent}
       </div>
 
@@ -126,7 +126,7 @@ export function DashboardShell({ children, title }: { children: ReactNode; title
       )}
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line-soft bg-void/80 px-6 backdrop-blur-lg">
+        <header className="sticky top-8 z-30 flex h-16 items-center justify-between border-b border-line-soft bg-void/80 px-6 backdrop-blur-lg">
           <div className="flex items-center gap-3">
             <button className="p-1 text-text-md lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
               <Menu size={20} />

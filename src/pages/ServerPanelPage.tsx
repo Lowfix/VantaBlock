@@ -429,7 +429,7 @@ export function ServerPanelPage() {
       )}
 
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line-soft bg-void/90 px-4 backdrop-blur-lg sm:px-6">
+        <header className="sticky top-8 z-30 flex h-16 items-center justify-between border-b border-line-soft bg-void/90 px-4 backdrop-blur-lg sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <button className="p-1 text-text-lo hover:text-text-hi lg:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Open menu">
               <MenuIcon size={20} />
