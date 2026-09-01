@@ -14,18 +14,16 @@ useful only as reference if the authenticated app is ever rebuilt), [FRONTEND.md
 
 ## What the site is today
 
-Three static routes, all client-side (`react-router-dom`, plain `<BrowserRouter>` — see
-FRONTEND.md): `/` (`src/pages/LandingPage.tsx` — hero, features, a server-location teaser,
-the invite-only/plan-tiers section, FAQ, closing CTA, footer), `/locations`
-(`LocationsPage.tsx` — a US dot-map with California highlighted as the single "US West" region,
-region facts, and an *estimated* latency-by-city table), and `/get-started` (`GetStartedPage.tsx`
-— a mock signup/login form that submits nothing and says so). No login/register/dashboard, no
-live data fetching of any kind. `/legal/{terms,privacy,refunds,acceptable-use}` (`LegalPage.tsx`
-+ `src/legal/`) hold the four legal documents — drafted 2026-08-29 for a California sole
-proprietor, **not attorney-reviewed, with placeholder county/emails in `src/legal/entity.ts`**
-that must be filled before they go live. Every CTA either scrolls to a landing-page section or
-lands on the mock get-started page. There is no signup or contact flow behind any of it right
-now.
+A static marketing site with an unusually deep demo, all client-side (`react-router-dom`, no
+backend anywhere): `/` (landing — hero, features, location teaser, invite-only plan tiers, FAQ,
+CTA), `/locations` (US dot-map, California region, estimated latency table), `/get-started`
+(mock signup/login — submits nothing and says so; invite-code field), `/legal` + `/legal/:slug`
+(four attorney-unreviewed drafts, hidden in production behind `LEGAL_PAGES_ENABLED`), and the
+`/panel-preview/*` **panel demo** — the real pre-teardown panel UI (dashboard, 14-tab server
+panel, billing, support, account) recovered from git history and run against a fake in-memory API
+(`src/demo/`), clearly labeled as a demo, lazy-loaded so the marketing bundle stays small. See
+FRONTEND.md's "The panel demo" before touching it — it looks like a live app on purpose, but
+nothing in it touches the network.
 
 **Deploys via Cloudflare Pages reading directly from `github.com/Lowfix/VantaBlock`** — push to
 `main`, Pages auto-builds (`npm run build`, output `dist/`) and republishes. There is no custom

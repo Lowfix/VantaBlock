@@ -34,6 +34,10 @@ Detailed docs live in `.claude/` — **read the relevant one(s) before making no
 
 ## Must-know before touching anything
 
+- **The `/panel-preview` panel demo looks like a live app but is not one.** It's the recovered
+  pre-teardown panel UI running on an in-memory fake API (`src/demo/`) — its `demoFetch` calls
+  never touch the network. Don't "fix" it by wiring anything real, and don't mistake it for
+  evidence that a backend exists.
 - **There is no backend.** Don't add API calls, a database, or auth logic without first confirming
   with the user that the authenticated app is actually being rebuilt — that's a bigger decision
   than a normal feature request, see PROJECT.md's History section.

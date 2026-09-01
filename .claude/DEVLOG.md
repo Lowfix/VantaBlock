@@ -31,6 +31,59 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-09-01 — Panel demo: the real pre-teardown panel, recovered and run on a fake in-memory backend
+
+**What:** `/panel-preview` went from a single hand-built static mock page to the **actual product
+panel**: dashboard with live server cards, the full 14-tab server panel (console with a working
+command line + usage charts, file manager with a real editable fake file tree, backups, databases,
+schedules, subusers, activity log, ports, subdomain, startup vars, settings, player manager,
+plugins with a Modrinth-style search/install flow, modpacks), billing (invoices, plan changes, a
+Stripe-free add-funds flow), support (tickets with a delayed staff auto-reply), and account
+settings. Everything is interactive and mutates shared demo state: power actions boot/stop with
+console sequences, `/whitelist add` in the console shows up in the Players tab (they share the
+fake whitelist.json), deploying a server actually provisions one that appears on the dashboard and
+comes online. A persistent "Panel demo — sample data, nothing is real or saved" pill keeps it
+honest; reload resets everything.
+
+**How — recovery, not a rewrite:** ~50 files restored verbatim from `git show 584357a^:...` (the
+last pre-teardown commit): all panel tabs, the dashboard/billing/support/account pages,
+DashboardShell, ServerPanelPage, the deleted ui primitives, lib helpers, and mock-data files. Three
+mechanical transformations: `fetch(` → `demoFetch(`, route strings prefixed `/panel-preview`,
+`duxy.online` → `vantablock.net`. Then a hand-written fake backend: `src/demo/store.ts`
+(state + engine + console command handler), `src/demo/api.ts` (`demoFetch` — ~45 routes matching
+the old Express API, returning real `Response` objects with fake latency), and a demo rewrite of
+`lib/liveConsoleStore.ts` (same exports as the old WebSocket version). AddFundsModal was rewritten
+Stripe-free (the old one imported `@stripe/react-stripe-js`, no longer a dependency);
+DeployServerModal lost its admin-vs-request split (always plan picker, always instant deploy).
+Lazy-loaded via `React.lazy` — the marketing bundle stayed at 135KB gz; the demo is its own
+~200KB of chunks.
+
+**Gotchas hit (all fixed, worth remembering):**
+- The initial git history search for a "mock era" commit found none — the repo's initial commit
+  already had the backend wired in. Hence the fake-API approach instead of recovering mock tabs.
+- Pages seeded local form state from `useUser()` before the (async, fake-latency) user record
+  arrived — AccountSettings rendered blank fields. The old app's RequireAuth gated that; the demo
+  now has a `DemoReady` gate in PanelDemoScope doing the same.
+- Three mobile overflows on the server page: an `<input>` keeps ~170px intrinsic min-width even at
+  `flex-1` (needs `min-w-0`), the power-button row needed `flex-wrap`, and the demo pill itself
+  was wider than 390px (`whitespace-nowrap` + fixed → `max-w-[calc(100vw-1.5rem)]` + truncate).
+- `useMyServers`' `toGameServerPlaceholder` labeled every server's location "Local" (old dev
+  default) — now "California (US West)".
+
+**Verified with Playwright against the dev server, both viewports:** every tab renders with zero
+console errors; console `list` command answers; power cycle offline→starting(with boot lines)→
+online; backup create completes async; plugin search+install ("Chunky") lands in the installed
+list; billing balance $25→$35 through the add-funds flow; new support ticket receives the
+automated staff reply in its thread; deploying "Creative Fridays" put a card on the dashboard that
+came online with live stats; account fields prefill and save; no horizontal scroll at 390px;
+screenshots reviewed throughout.
+
+**See also:** `src/demo/store.ts`, `src/demo/api.ts`, `src/demo/PanelDemoScope.tsx`,
+`src/lib/liveConsoleStore.ts`, FRONTEND.md ("The panel demo" — plus rewritten ui/, mock-data/,
+folder-layout sections), PROJECT.md, CLAUDE.md's new must-know bullet.
+
+---
+
 ## 2026-08-31 — Panel preview page (`/panel-preview`) + invite-code field on signup
 
 **What:** New static `PanelPreviewPage` — the logged-in panel overview a user with servers will

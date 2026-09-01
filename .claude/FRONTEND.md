@@ -5,7 +5,7 @@ the old authenticated dashboard/console/billing UI this file used to document, t
 PROJECT.md's History section and git history before the 2026-08-22 teardown commit.**
 
 React 19 + TypeScript + Vite 8 + Tailwind 4 (via `@tailwindcss/vite`). No state management library,
-no Context. Six routes across five pages as of 2026-08-31 (see below) — `react-router-dom` was fully removed in the
+no Context. Ten routes across nine pages as of 2026-09-01 (see below) — `react-router-dom` was fully removed in the
 teardown and then reintroduced, minimally, when a second page became genuinely needed (see
 DEVLOG.md's "Client-side routing reintroduced" entry). Don't add more router surface (data routers,
 loaders, nested layouts) than the flat `<Route>` list currently uses unless a real need shows up.
@@ -17,24 +17,39 @@ src/
   pages/LandingPage.tsx         The marketing page (still the site's main content)
   pages/LocationsPage.tsx       /locations — US dot-map with California as the one region, latency table
   pages/GetStartedPage.tsx      Mock signup/login page — NOT wired to any backend, see below
-  pages/PanelPreviewPage.tsx    /panel-preview — static preview of the logged-in panel overview, demo data only
   pages/LegalPage.tsx           /legal/:slug — renders whichever of the four legal documents matches
   legal/                        The legal documents themselves (terms/privacy/refunds/acceptable-use.tsx),
                                 entity.ts (who "we" are — ONE place to change), types.ts, index.ts
+  pages/{Dashboard,ServerPanel,Billing,AccountSettings,Support}Page.tsx
+                                The PANEL DEMO pages — the real pre-teardown panel UI, recovered from
+                                git and run against a fake in-memory backend. See "The panel demo".
+  demo/                         That fake backend: store.ts (state+engine), api.ts (demoFetch),
+                                PanelDemoScope.tsx (providers + the "this is a demo" pill)
+  context/UserContext.tsx       Recovered user provider — its apiFetch now goes through demoFetch
+  components/panel/             The 14 recovered server-panel tabs (Console, Files, Backups, ...)
+  components/dashboard/         ServerCard
+  components/billing/           DeployServerModal, ChangePlanModal, AddFundsModal (demo, Stripe-free)
+  components/support/           TicketThreadModal
+  components/account/           DeleteAccountModal
   components/landing/           Hero, Features, LocationsTeaser, FriendsPhaseNotice, FAQ, CTASection, AmbientBackground
   components/locations/         USMap (the map component) + usMapData.ts (GENERATED — see below)
-  components/layout/            AmbientPage (shared page shell), PublicNavbar, Footer, Logo
+  components/layout/            AmbientPage, PublicNavbar, Footer, Logo, DashboardShell (panel demo)
   components/illustrations/     VoxelIsland, FloatingVoxels (decorative, parallax-driven)
-  components/ui/                Button, Badge — the only two primitives still in use
-  lib/                          cn(), useParallax, useElementHeight — small, dependency-free helpers
-  mock-data/plans.ts            The only surviving mock-data file — real plan-tier content, not fake data
+  components/ui/                Button, Badge + the recovered panel primitives (Card, Input, Modal,
+                                Toast, Toggle, Tabs, Dropdown, ProgressBar, UsageChart, Slider, Avatar, Menu)
+  lib/                          cn(), useParallax, useElementHeight + recovered panel helpers
+                                (consoleFormatting, liveConsoleStore*, useLiveConsole, useLiveServerStats,
+                                useMyServers, usePolling, activity, stripeFees) — *liveConsoleStore is a
+                                demo rewrite, same exports as the old WebSocket version
+  mock-data/                    plans.ts (real plan content) + recovered demo data
+                                (console, servers, versions, serverTypes, modpacks, invoices)
 scripts/gen-us-map.mjs          One-off generator for usMapData.ts (not part of the build)
 ```
 
 ## `App.tsx` / `main.tsx`
 
 `App.tsx` wraps `<BrowserRouter><Routes>` around the routes `/` (`LandingPage`), `/locations`
-(`LocationsPage`), `/get-started` (`GetStartedPage`), `/panel-preview` (`PanelPreviewPage`), and
+(`LocationsPage`), `/get-started` (`GetStartedPage`), the five lazy-loaded `/panel-preview` panel-demo routes (see "The panel demo" below), and
 `/legal` + `/legal/:slug` (`LegalPage` —
 bare `/legal` and unknown slugs redirect to `/legal/terms` inside the component), plus one tiny
 non-route component, `ScrollManager`. Deliberately minimal — a plain `<Route>` list, no data routers/loaders, no
@@ -149,18 +164,40 @@ does not use `AmbientPage` — it has its own centered-card layout.) The signup 
 is a required **invite code** (the invite-only phase made concrete — validated by nothing, like
 every other field here), and the post-submit banner's primary action links to `/panel-preview`.
 
-## `PanelPreviewPage.tsx` — static preview of the panel overview
+## The panel demo (`/panel-preview/*`) — the real panel UI on a fake backend
 
-`/panel-preview`: what a logged-in user with servers will see once accounts exist — app-style top
-bar (fake "Kestrel_" user chip, "Preview" badge), an honesty banner, stat tiles, two demo server
-cards (one online, one stopped), a fake console, and a resource/backups/region sidebar. Modeled on
-the real pre-teardown `DashboardPage` (`git show 584357a^:src/pages/DashboardPage.tsx`) but
-rebuilt in the marketing design language. **Not wired to anything**: every action button just
-raises a "part of the preview" toast; all numbers are hand-written demo data (kept plausible
-against `mock-data/plans.ts`). Layout gotcha solved here: the server cards are stacked with
-`space-y`, NOT a `grid` — an auto grid track floors at the items' intrinsic min-content width
-(`min-w-0` on a flex *item* doesn't reduce the flex *container's* intrinsic contribution), which
-overflowed 390px phones by 4px. If it's ever regridded, use `grid-cols-[minmax(0,1fr)]`.
+Five routes, all lazy-loaded (separate ~200KB chunk; the marketing bundle doesn't pay for it):
+`/panel-preview` (Dashboard/overview), `/panel-preview/servers/:serverId` (the full server panel
+with 14 tabs), `/panel-preview/billing`, `/panel-preview/support`, `/panel-preview/account`.
+All sit under one layout route, `demo/PanelDemoScope.tsx` — user + toast providers, a
+RequireAuth-style gate (pages must not render before the demo user "loads", or forms seed their
+local state from null), and the persistent "Panel demo — sample data" pill.
+
+**This is not new UI.** The pages, tabs, modals, and primitives are the real pre-teardown panel
+(recovered from `git show 584357a^:...`), with exactly three kinds of change: (1) every
+`fetch(` became `demoFetch(` (import from `demo/api`), (2) route strings got the
+`/panel-preview` prefix, (3) a handful of demo-policy edits (DeployServerModal always shows the
+plan picker and deploys instantly; AddFundsModal is a Stripe-free rewrite that says it's fake;
+"Local" location label → "California (US West)").
+
+**`demo/store.ts`** is the in-memory backend state: two seeded servers (Emberfall SMP online on
+paper, Skyblock Weekends offline on fabric) each with a full fake file tree (server.properties,
+whitelist/ops/banned JSON that the Players tab and console commands actually read AND write),
+backups, a database, allocations, schedules, subusers, activity log, startup vars, plugins — plus
+the demo user, invoices, and support tickets. It also runs the "engine": stat wobble, ambient
+console chatter (players join/leave), boot/stop sequences for power actions, and a real command
+handler (`/list`, `/say`, `/whitelist`, `/op`, `/kick`, `/ban`, `/tps`, `/stop`, ...).
+
+**`demo/api.ts`** (`demoFetch`) pattern-matches the old Express API surface (~45 routes:
+auth/account, servers CRUD + power + command, files, backups, databases, plugins incl. a canned
+Modrinth-style search catalog, network allocations, startup, schedules incl. execute, subusers,
+activity, subdomain, support tickets with a delayed staff auto-reply, invoices, demo top-up) and
+returns real `Response` objects with ~100-250ms artificial latency. Response shapes are dictated
+by the interfaces in each recovered tab — change a tab, check its interface still matches.
+
+**`lib/liveConsoleStore.ts`** is a demo rewrite (same exports as the old WebSocket version) that
+feeds the console + the Usage charts from the store. Nothing anywhere in the demo touches the
+network; a reload resets everything — which is what the pill promises.
 
 ## Every button/link on the site
 
@@ -186,23 +223,21 @@ There is currently no backend, so nothing here submits data or requires a sessio
 If a real contact/invite mechanism ever comes back, that's the place to wire one of these buttons
 to something real rather than inventing a destination now.
 
-## `src/components/ui/` — only two primitives survive
+## `src/components/ui/` — full primitive set is back (for the panel demo)
 
-`Button` (exports both the `Button` component and `buttonVariants({variant, size, className})` —
-almost everything on the site uses `buttonVariants` directly on an `<a>`/`<Link>` rather than the
-`<button>` component, since every CTA here is a navigation, not a submit action) and `Badge`
-(`tone: "neutral" | "accent" | "good" | "warn" | "bad"`). Every other primitive that used to live
-here (Avatar, Card, Dropdown, GoogleButton, Input, Menu, Modal, ProgressBar, Slider, Tabs, Toast,
-Toggle, UsageChart) was deleted in the teardown — none of them had a surviving consumer. Grep
-before assuming one is safe to reintroduce casually; check what actually needs it first.
+`Button`/`Badge` never left. The rest (Card, Input, Modal, Toast, Toggle, Tabs, Dropdown,
+ProgressBar, UsageChart, Slider, Avatar, Menu) were deleted in the teardown and recovered verbatim
+on 2026-09-01 because the panel demo consumes them again. They're only imported by panel-demo code,
+so they live in the lazy chunk, not the marketing bundle.
 
-## `src/mock-data/plans.ts` — the one surviving file
+## `src/mock-data/`
 
-Real, load-bearing content (not placeholder data) — six plan tiers (name, RAM, vCores, storage,
-player cap, feature list); `FriendsPhaseNotice` displays the first three as a fanned deck. Every
-other `mock-data/*.ts` file (`console.ts`, `invoices.ts`, `modpacks.ts`, `serverTypes.ts`,
-`servers.ts`, `versions.ts`) existed to back the now-deleted dashboard/panel UI and was deleted
-along with it.
+`plans.ts` is real, load-bearing content (six plan tiers rendered by `FriendsPhaseNotice`, and
+the source of truth for the demo's plan limits). The other files (`console.ts`, `invoices.ts`,
+`modpacks.ts`, `serverTypes.ts`, `versions.ts`, `servers.ts`) were deleted in the teardown and
+recovered for the panel demo — `console.ts`'s line generators drive the demo console's ambient
+chatter; `servers.ts` contributes only types (its array stayed empty; seeded servers live in
+`demo/store.ts`).
 
 ## Styling
 
