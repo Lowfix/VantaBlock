@@ -5,7 +5,7 @@ the old authenticated dashboard/console/billing UI this file used to document, t
 PROJECT.md's History section and git history before the 2026-08-22 teardown commit.**
 
 React 19 + TypeScript + Vite 8 + Tailwind 4 (via `@tailwindcss/vite`). No state management library,
-no Context. Five routes across four pages as of 2026-08-29 (see below) — `react-router-dom` was fully removed in the
+no Context. Six routes across five pages as of 2026-08-31 (see below) — `react-router-dom` was fully removed in the
 teardown and then reintroduced, minimally, when a second page became genuinely needed (see
 DEVLOG.md's "Client-side routing reintroduced" entry). Don't add more router surface (data routers,
 loaders, nested layouts) than the flat `<Route>` list currently uses unless a real need shows up.
@@ -17,6 +17,7 @@ src/
   pages/LandingPage.tsx         The marketing page (still the site's main content)
   pages/LocationsPage.tsx       /locations — US dot-map with California as the one region, latency table
   pages/GetStartedPage.tsx      Mock signup/login page — NOT wired to any backend, see below
+  pages/PanelPreviewPage.tsx    /panel-preview — static preview of the logged-in panel overview, demo data only
   pages/LegalPage.tsx           /legal/:slug — renders whichever of the four legal documents matches
   legal/                        The legal documents themselves (terms/privacy/refunds/acceptable-use.tsx),
                                 entity.ts (who "we" are — ONE place to change), types.ts, index.ts
@@ -33,7 +34,8 @@ scripts/gen-us-map.mjs          One-off generator for usMapData.ts (not part of 
 ## `App.tsx` / `main.tsx`
 
 `App.tsx` wraps `<BrowserRouter><Routes>` around the routes `/` (`LandingPage`), `/locations`
-(`LocationsPage`), `/get-started` (`GetStartedPage`), and `/legal` + `/legal/:slug` (`LegalPage` —
+(`LocationsPage`), `/get-started` (`GetStartedPage`), `/panel-preview` (`PanelPreviewPage`), and
+`/legal` + `/legal/:slug` (`LegalPage` —
 bare `/legal` and unknown slugs redirect to `/legal/terms` inside the component), plus one tiny
 non-route component, `ScrollManager`. Deliberately minimal — a plain `<Route>` list, no data routers/loaders, no
 providers. `main.tsx` is untouched boilerplate (`createRoot` + `<StrictMode>`).
@@ -143,7 +145,22 @@ logged-in state — it swaps to an explicit "this is a preview, nothing was subm
 signup form carries the standard consent line ("By creating an account you confirm you're 18 or
 older and agree to the Terms / AUP / Privacy Policy") linking to `/legal/*`. If real accounts ever
 come back, this is the page to rewire, not a reason to assume auth already exists elsewhere. (It
-does not use `AmbientPage` — it has its own centered-card layout.)
+does not use `AmbientPage` — it has its own centered-card layout.) The signup form's first field
+is a required **invite code** (the invite-only phase made concrete — validated by nothing, like
+every other field here), and the post-submit banner's primary action links to `/panel-preview`.
+
+## `PanelPreviewPage.tsx` — static preview of the panel overview
+
+`/panel-preview`: what a logged-in user with servers will see once accounts exist — app-style top
+bar (fake "Kestrel_" user chip, "Preview" badge), an honesty banner, stat tiles, two demo server
+cards (one online, one stopped), a fake console, and a resource/backups/region sidebar. Modeled on
+the real pre-teardown `DashboardPage` (`git show 584357a^:src/pages/DashboardPage.tsx`) but
+rebuilt in the marketing design language. **Not wired to anything**: every action button just
+raises a "part of the preview" toast; all numbers are hand-written demo data (kept plausible
+against `mock-data/plans.ts`). Layout gotcha solved here: the server cards are stacked with
+`space-y`, NOT a `grid` — an auto grid track floors at the items' intrinsic min-content width
+(`min-w-0` on a flex *item* doesn't reduce the flex *container's* intrinsic contribution), which
+overflowed 390px phones by 4px. If it's ever regridded, use `grid-cols-[minmax(0,1fr)]`.
 
 ## Every button/link on the site
 

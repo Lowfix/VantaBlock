@@ -107,13 +107,33 @@ export function GetStartedPage() {
                   {plan ? `, and no ${plan.name} server was deployed` : ""}. When public signups open,
                   this is the form you'll use.
                 </p>
-                <Link to="/#pricing" className={cn(buttonVariants({ variant: "secondary" }), "mt-4 w-full")}>
+                <Link to="/panel-preview" className={cn(buttonVariants({ variant: "primary" }), "mt-4 w-full")}>
+                  Preview the panel
+                </Link>
+                <Link to="/#pricing" className={cn(buttonVariants({ variant: "secondary" }), "mt-2 w-full")}>
                   Back to plans
                 </Link>
               </div>
             ) : (
               <>
                 <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+                  {mode === "signup" && (
+                    <div>
+                      <Field
+                        id="inviteCode"
+                        label="Invite code"
+                        placeholder="VANTA-XXXX"
+                        autoCapitalize="characters"
+                        autoComplete="off"
+                        spellCheck={false}
+                        required
+                      />
+                      <p className="mt-1.5 text-[12px] leading-relaxed text-text-lo">
+                        Vantablock is invite-only right now — ask whoever sent you here for a code.
+                      </p>
+                    </div>
+                  )}
+
                   {mode === "signup" && <Field id="username" label="Username" placeholder="Kestrel_" required minLength={3} />}
 
                   <Field id="email" label="Email address" type="email" placeholder="you@example.com" required />

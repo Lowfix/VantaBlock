@@ -31,6 +31,38 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-08-31 — Panel preview page (`/panel-preview`) + invite-code field on signup
+
+**What:** New static `PanelPreviewPage` — the logged-in panel overview a user with servers will
+see once accounts exist (stat tiles, two demo server cards, fake console, resource/backups/region
+sidebar; fake "Kestrel_" user chip). Modeled on the pre-teardown `DashboardPage` recovered from
+git (`584357a^`), rebuilt in the marketing design language; every action button raises a "part of
+the preview" toast, nothing is wired. Linked from the footer's Product column, a secondary "Peek
+at the panel" button in `CTASection`, and the signup page's post-submit banner. `GetStartedPage`'s
+signup form also gained a required **Invite code** field (invite-only phase; validated by nothing,
+like the rest of the mock form).
+
+**Bug worth remembering:** on 390px phones the page scrolled horizontally by 4px. The server cards
+sat in a plain `grid gap-4`; an auto grid track floors at the items' *intrinsic min-content* width,
+and `min-w-0` on a flex **item** does not reduce its flex **container's** intrinsic contribution —
+so each card's header row (name + subdomain + action buttons ≈ 328px + card padding = 370px) set
+the shared track to 370 > 342 available. Diagnosis was non-obvious because both cards share one
+track: emptying card A changed nothing (card B still held the track), which made it look
+content-independent. Fix: stack the cards with `space-y-4` (no intrinsic track sizing) and
+`truncate` the subdomain span. If a multi-column server grid ever comes back, size it
+`grid-cols-[minmax(0,1fr)]`, not bare `grid`.
+
+**Verified** with Playwright against the dev server: toast on action click, invite code required
+(form blocks without it), banner → panel navigation, footer/CTA links, zero console errors, no
+horizontal overflow at 390px or 1440px; desktop + mobile screenshots reviewed. Pushed after
+`tsc -b`/build/lint clean; Cloudflare check-run confirmed green (see the `_redirects` entry below
+for why that check matters).
+
+**See also:** `src/pages/PanelPreviewPage.tsx`, `src/pages/GetStartedPage.tsx`, `src/App.tsx`,
+`src/components/layout/Footer.tsx`, `src/components/landing/CTASection.tsx`, FRONTEND.md.
+
+---
+
 ## 2026-08-29 — Production had been stuck on an Aug 22 build: `public/_redirects` fails the Workers deploy
 
 **What:** User reported the new pages weren't on production. GitHub check-runs

@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { buttonVariants } from "../ui/Button";
 import { VoxelIsland } from "../illustrations/VoxelIsland";
 
@@ -21,6 +22,9 @@ export function CTASection() {
                 View plans
                 <ArrowRight size={16} />
               </a>
+              <Link to="/panel-preview" className={buttonVariants({ variant: "secondary", size: "lg" })}>
+                Peek at the panel
+              </Link>
             </div>
           </div>
         </div>

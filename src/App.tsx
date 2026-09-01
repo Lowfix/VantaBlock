@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { LandingPage } from "./pages/LandingPage";
 import { GetStartedPage } from "./pages/GetStartedPage";
 import { LocationsPage } from "./pages/LocationsPage";
+import { PanelPreviewPage } from "./pages/PanelPreviewPage";
 import { LegalPage } from "./pages/LegalPage";
 import { LEGAL_PAGES_ENABLED } from "./config";
 
@@ -36,6 +37,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/locations" element={<LocationsPage />} />
         <Route path="/get-started" element={<GetStartedPage />} />
+        <Route path="/panel-preview" element={<PanelPreviewPage />} />
         {LEGAL_PAGES_ENABLED ? (
           <>
             {/* /legal alone and unknown slugs both redirect to the Terms inside LegalPage. */}
