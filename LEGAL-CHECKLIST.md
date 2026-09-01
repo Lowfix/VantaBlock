@@ -18,7 +18,7 @@ Last updated: 2026-09-01
 | Venue filled in: Tulare County, California | ✅ Done |
 | Real contact addresses: legal@ / privacy@ / abuse@ / support@vantablock.net | ✅ Done |
 | Cloudflare Email Routing forwarding all four to the private Gmail inbox | ✅ Done |
-| Send a test email to legal@vantablock.net and confirm it arrives | ⬜ 2 minutes |
+| Send a test email to legal@vantablock.net and confirm it arrives | ✅ Done (2026-09-01) |
 | Fictitious Business Name (FBN) statement — Tulare County | ⬜ To do |
 | DMCA agent registration — US Copyright Office ($6) | ⬜ To do |
 | Attorney review of the four documents | ⬜ To do |
