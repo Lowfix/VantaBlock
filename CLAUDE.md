@@ -50,7 +50,8 @@ Detailed docs live in `.claude/` — **read the relevant one(s) before making no
   off on the deployed site. `entity.ts`'s values are real as of 2026-09-01 (Tulare County,
   `*@vantablock.net` mailboxes); the remaining gates are the user's real-world errands (attorney
   review, county FBN filing, DMCA agent registration) — flip the flag to `true` to launch when
-  they say so. Don't quietly change the substantive choices recorded in the
+  they say so. The full status + step-by-step errand list lives in `LEGAL-CHECKLIST.md` at the
+  repo root — keep it updated as items complete. Don't quietly change the substantive choices recorded in the
   DEVLOG entry (refund triggers, age, venue, grace/retention periods) — those were the user's.
 - **Never add `public/_redirects`.** Production is a Cloudflare Worker (static assets) whose SPA
   fallback is configured dashboard-side; a `/* /index.html 200` rule breaks the deploy and the
