@@ -155,7 +155,8 @@ There is currently no backend, so nothing here submits data or requires a sessio
   a signup action.
 - `LocationsTeaser`'s "See the region" → `/locations`. `LocationsPage`'s closing CTAs → `/#pricing`
   and `/#features`.
-- `FriendsPhaseNotice`'s plan cards each have a "Deploy {plan.name}" button/link
+- `FriendsPhaseNotice`'s plan cards each have a "Get started" button/link (labeled "Deploy
+  {plan.name}" until 2026-08-30 — renamed at the user's request; destination unchanged)
   (`PlanCardBody`, shared by the desktop fan and the mobile stacked list) to
   `/get-started?plan={plan.id}` — the mock signup/login page described above.
 - `Footer`: two columns only since 2026-08-29. **Product** — Features, Server Locations, Pricing,

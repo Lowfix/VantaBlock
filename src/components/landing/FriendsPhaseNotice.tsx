@@ -208,7 +208,7 @@ function PlanCardBody({ plan, icon: Icon, expanded }: { plan: Plan; icon: typeof
         onClick={(e: MouseEvent) => e.stopPropagation()}
         className={buttonVariants({ variant: expanded ? "primary" : "outline", size: "sm", className: "mt-4 w-full" })}
       >
-        Deploy {plan.name}
+        Get started
       </Link>
     </>
   );
