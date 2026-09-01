@@ -89,7 +89,7 @@ export function GetStartedPage() {
             </h1>
             <p className="mt-2 text-[14px] text-text-lo">
               {plan
-                ? `You're signing up for the ${plan.name} plan — $${plan.price.toFixed(2)}/mo, ${plan.ram}GB DDR5 RAM.`
+                ? `You're signing up for the ${plan.name} plan — ${plan.ram}GB DDR5 RAM. Planned public pricing ${plan.price.toFixed(2)}/mo; free during the private beta.`
                 : mode === "signup"
                   ? "Deploy your first server in under a minute."
                   : "Log in to manage your servers."}

@@ -1,5 +1,6 @@
 import { Cpu, Zap, Activity } from "lucide-react";
 import { buttonVariants } from "../ui/Button";
+import { RequestInvite } from "./RequestInvite";
 import { Badge } from "../ui/Badge";
 
 export function Hero() {
@@ -32,6 +33,7 @@ export function Hero() {
             >
               View pricing
             </a>
+            <RequestInvite />
           </div>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[13px] text-text-lo">

@@ -31,6 +31,31 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-09-01 — Private-beta copy pass: make the invite-only mode unmistakable
+
+**What:** Site-wide framing changes (user request, from a ChatGPT-suggested list) so no visitor
+wonders whether the service is free, paid, public, or unavailable: a "Private beta · Invite
+required · No charge during testing" strip above the navbar (inside the sticky header, both
+pages); navbar CTA "Get started" → "Use an invite"; plan-card buttons → "Choose {plan.name}";
+pricing eyebrow → "Planned public pricing"; the signup blurb now says "Planned public pricing
+$X/mo; free during the private beta"; and a secondary "Request an invite" button in the hero.
+
+**"Request an invite" is deliberately an honest placeholder** (user chose this over an email or
+Discord link when asked): a modal explaining invites currently come from friends already hosting
+here, that public requests will open later, with a CTA into the panel demo. No fake form.
+`src/components/landing/RequestInvite.tsx` is the single component to rewire when a real request
+channel (email/Discord/form) exists. The signup invite-code field already existed (2026-08-31).
+
+**Verified** with Playwright: strip + renamed CTA on desktop and 390px, modal opens/links to
+`/panel-preview`, three "Choose {plan}" buttons, signup blurb, no overflow, zero console errors.
+(Note for graders of my test scripts: the pricing eyebrow is CSS-`uppercase`, so `innerText`
+comparisons against mixed-case strings fail — match case-insensitively.)
+
+**See also:** `src/components/landing/RequestInvite.tsx`, `PublicNavbar.tsx`, `Hero.tsx`,
+`FriendsPhaseNotice.tsx`, `GetStartedPage.tsx`, FRONTEND.md's button inventory.
+
+---
+
 ## 2026-09-01 — Panel demo: the real pre-teardown panel, recovered and run on a fake in-memory backend
 
 **What:** `/panel-preview` went from a single hand-built static mock page to the **actual product

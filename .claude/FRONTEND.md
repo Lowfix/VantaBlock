@@ -204,13 +204,17 @@ network; a reload resets everything — which is what the pill promises.
 There is currently no backend, so nothing here submits data or requires a session:
 
 - `PublicNavbar`: Features (`/#features`), Locations (`/locations`), Pricing (`/#pricing`), Panel (`/panel-preview`), and
-  "Get started" (`/get-started` — the mock signup/login page; was `/#pricing` until 2026-08-30); logo → `/`. All `<Link>`s.
+  "Use an invite" (`/get-started` — the mock signup/login page; labeled "Get started" until the 2026-09-01 private-beta copy pass). The header also carries the "Private beta · Invite required · No charge during testing" strip; logo → `/`. All `<Link>`s.
 - Hero's "View pricing" and `CTASection`'s "View plans" scroll to `#pricing` — informational, not
-  a signup action.
+  a signup action. Hero also has a secondary "Request an invite" button (`RequestInvite.tsx`) that
+  opens an HONEST placeholder modal — invite requests aren't open yet and there's no public contact
+  channel, so it says so and points at the panel demo instead of pretending to submit (the user's
+  explicit choice, 2026-09-01). Rewire that one component when a real request channel exists.
 - `LocationsTeaser`'s "See the region" → `/locations`. `LocationsPage`'s closing CTAs → `/#pricing`
   and `/#features`.
-- `FriendsPhaseNotice`'s plan cards each have a "Get started" button/link (labeled "Deploy
-  {plan.name}" until 2026-08-30 — renamed at the user's request; destination unchanged)
+- `FriendsPhaseNotice`'s plan cards each have a "Choose {plan.name}" button/link (was "Deploy
+  {plan.name}", then briefly "Get started"; destination unchanged), under a "Planned public
+  pricing" eyebrow
   (`PlanCardBody`, shared by the desktop fan and the mobile stacked list) to
   `/get-started?plan={plan.id}` — the mock signup/login page described above.
 - `Footer`: two columns only since 2026-08-29. **Product** — Features, Server Locations, Pricing,

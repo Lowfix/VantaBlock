@@ -208,7 +208,7 @@ function PlanCardBody({ plan, icon: Icon, expanded }: { plan: Plan; icon: typeof
         onClick={(e: MouseEvent) => e.stopPropagation()}
         className={buttonVariants({ variant: expanded ? "primary" : "outline", size: "sm", className: "mt-4 w-full" })}
       >
-        Get started
+        Choose {plan.name}
       </Link>
     </>
   );
@@ -337,7 +337,7 @@ export function FriendsPhaseNotice() {
 
       <div className="mx-auto mt-16 max-w-3xl px-6">
         <p className="text-center text-[13px] font-semibold uppercase tracking-wider text-accent-400">
-          Plans on offer
+          Planned public pricing
         </p>
         <p className="mx-auto mt-3 max-w-xl text-center text-[15px] leading-relaxed text-text-md">
           Priced the way they'll stay once pricing goes live for everyone. Have an invite?
