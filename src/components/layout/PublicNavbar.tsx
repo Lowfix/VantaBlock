@@ -11,6 +11,7 @@ const navLinks = [
   { label: "Features", href: "/#features" },
   { label: "Locations", href: "/locations" },
   { label: "Pricing", href: "/#pricing" },
+  { label: "Panel", href: "/panel-preview" },
 ];
 
 export function PublicNavbar() {

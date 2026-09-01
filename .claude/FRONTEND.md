@@ -166,7 +166,7 @@ overflowed 390px phones by 4px. If it's ever regridded, use `grid-cols-[minmax(0
 
 There is currently no backend, so nothing here submits data or requires a session:
 
-- `PublicNavbar`: Features (`/#features`), Locations (`/locations`), Pricing (`/#pricing`), and
+- `PublicNavbar`: Features (`/#features`), Locations (`/locations`), Pricing (`/#pricing`), Panel (`/panel-preview`), and
   "Get started" (`/get-started` — the mock signup/login page; was `/#pricing` until 2026-08-30); logo → `/`. All `<Link>`s.
 - Hero's "View pricing" and `CTASection`'s "View plans" scroll to `#pricing` — informational, not
   a signup action.
