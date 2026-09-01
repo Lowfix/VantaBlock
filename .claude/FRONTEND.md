@@ -150,7 +150,7 @@ does not use `AmbientPage` — it has its own centered-card layout.)
 There is currently no backend, so nothing here submits data or requires a session:
 
 - `PublicNavbar`: Features (`/#features`), Locations (`/locations`), Pricing (`/#pricing`), and
-  "Get started" (`/#pricing`); logo → `/`. All `<Link>`s.
+  "Get started" (`/get-started` — the mock signup/login page; was `/#pricing` until 2026-08-30); logo → `/`. All `<Link>`s.
 - Hero's "View pricing" and `CTASection`'s "View plans" scroll to `#pricing` — informational, not
   a signup action.
 - `LocationsTeaser`'s "See the region" → `/locations`. `LocationsPage`'s closing CTAs → `/#pricing`

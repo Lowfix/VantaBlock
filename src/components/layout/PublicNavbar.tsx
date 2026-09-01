@@ -32,7 +32,7 @@ export function PublicNavbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link to="/#pricing" className={buttonVariants({ variant: "primary", size: "sm" })}>
+          <Link to="/get-started" className={buttonVariants({ variant: "primary", size: "sm" })}>
             Get started
           </Link>
         </div>
@@ -60,7 +60,7 @@ export function PublicNavbar() {
               </Link>
             ))}
             <div className="mt-2 flex flex-col gap-2">
-              <Link to="/#pricing" onClick={() => setOpen(false)} className={buttonVariants({ variant: "primary", className: "w-full" })}>
+              <Link to="/get-started" onClick={() => setOpen(false)} className={buttonVariants({ variant: "primary", className: "w-full" })}>
                 Get started
               </Link>
             </div>
