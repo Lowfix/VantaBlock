@@ -9,14 +9,14 @@ interface FAQItem {
 
 const faqs: FAQItem[] = [
   {
-    question: "Why isn't there public pricing yet? Do I need an invite code?",
+    question: "Is the pricing on the plans real? Do I need an invite?",
     answer:
-      "Vantablock is currently running free of charge for a small group of friends while we build things out. There's no public pricing yet — the plans page shows every tier we'll support once pricing goes live, but for now, getting a server means getting an invite.",
+      "Yes and yes. The prices shown are our planned public pricing — what each tier will cost once we open up more widely. During the private beta nothing is charged: hosting is free, and getting a server means getting an invite code from someone already hosting with us.",
   },
   {
     question: "Is hosting really free right now?",
     answer:
-      "Yes — while we're in this early friends phase, servers are provisioned at no cost. That's not meant to be a permanent policy, just how things work while we're building things out. If and when that changes, you'd be notified before anything changes for your server.",
+      "Yes — during the private beta, servers are provisioned at no cost. That's not meant to be a permanent policy, just how things work while we're building things out. If and when that changes, you'd be notified before anything changes for your server.",
   },
   {
     question: "What hardware do you run?",
