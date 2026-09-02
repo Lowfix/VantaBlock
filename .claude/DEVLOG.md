@@ -31,6 +31,23 @@ the full explanation rather than duplicating it here. This file is the index of 
 
 ---
 
+## 2026-09-01 — Plan player counts lowered to researched, honest numbers
+
+**What:** The user flagged the per-plan player counts as "too high" and asked for researched
+values. Web research (2026 hosting guides + RAM calculators: Apex, WiseHosting, WinterNode,
+DatHost, Sparked, GameTeam, Wabbanode) converges on ~2GB baseline + ~1GB per 5 players for
+vanilla/Paper with light plugins; 2GB is "a few friends," 8GB the "sweet spot" for 20-30 with
+plugins; the old 45/60/75 numbers were marketing-table inflation. New counts in
+`mock-data/plans.ts`: 2GB→8, 4GB→15, 6GB→20, 8GB→30, 10GB→40, 12GB→50 (formula: max(8, (ram−2)×5)).
+
+**Propagation is automatic** — plans.ts is the single source: landing fan cards, /plans cards +
+comparison table, and the panel demo's `playersMax` (via `planLimits`) all verified showing the
+new numbers with no other edits. If counts change again, change ONLY plans.ts.
+
+**See also:** `src/mock-data/plans.ts`, the /plans entry below.
+
+---
+
 ## 2026-09-01 — /plans: full plan-detail page; landing stays a clean 3-tier fan
 
 **What:** New `PlansPage` at `/plans` in the Locations-page mold: all six tiers as detailed cards

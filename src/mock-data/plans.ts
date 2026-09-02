@@ -18,7 +18,7 @@ export const plans: Plan[] = [
     price: 2.99,
     vCores: "2 vCores @ 5.4GHz",
     storage: "20GB NVMe SSD",
-    players: "Up to 10 players",
+    players: "Up to 8 players",
     features: [
       "2GB DDR5 RAM",
       "AMD Ryzen 9 9955HX",
@@ -35,7 +35,7 @@ export const plans: Plan[] = [
     price: 5.99,
     vCores: "2 vCores @ 5.4GHz",
     storage: "40GB NVMe SSD",
-    players: "Up to 20 players",
+    players: "Up to 15 players",
     features: [
       "4GB DDR5 RAM",
       "AMD Ryzen 9 9955HX",
@@ -52,7 +52,7 @@ export const plans: Plan[] = [
     price: 8.99,
     vCores: "2 vCores @ 5.4GHz",
     storage: "60GB NVMe SSD",
-    players: "Up to 30 players",
+    players: "Up to 20 players",
     features: [
       "6GB DDR5 RAM",
       "AMD Ryzen 9 9955HX",
@@ -69,7 +69,7 @@ export const plans: Plan[] = [
     price: 11.99,
     vCores: "3 vCores @ 5.4GHz",
     storage: "80GB NVMe SSD",
-    players: "Up to 45 players",
+    players: "Up to 30 players",
     featured: true,
     features: [
       "8GB DDR5 RAM",
@@ -88,7 +88,7 @@ export const plans: Plan[] = [
     price: 14.99,
     vCores: "3 vCores @ 5.4GHz",
     storage: "100GB NVMe SSD",
-    players: "Up to 60 players",
+    players: "Up to 40 players",
     features: [
       "10GB DDR5 RAM",
       "AMD Ryzen 9 9955HX",
@@ -106,7 +106,7 @@ export const plans: Plan[] = [
     price: 17.99,
     vCores: "3 vCores @ 5.4GHz",
     storage: "120GB NVMe SSD",
-    players: "Up to 75 players",
+    players: "Up to 50 players",
     features: [
       "12GB DDR5 RAM",
       "AMD Ryzen 9 9955HX",
